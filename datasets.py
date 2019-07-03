@@ -67,29 +67,25 @@ class download(object):
 
 
 class read_modis(object):
-    def __init__(self,hdf_data_path):
+    def __init__(self, hdf_data_path):
         self.hdf_data_path = hdf_data_path
         df = gdal.Open(self.hdf_data_path, gdal.GA_ReadOnly)
         self.meta_data = df.GetMetadata()
-        sdf = df.GetSubDatasets()
-        self.band_details = [sdf[i][1] for i in range(len(sdf))]
-        self.num_bands = len(sdf)
-        self.img_shp = gdal.Open(sdf[0][0]).ReadAsArray().shape
+        self.sdf = df.GetSubDatasets()
+        self.band_details = [self.sdf[i][1] for i in range(len(self.sdf))]
+        self.num_bands = len(self.sdf)
+        self.img_shp = gdal.Open(self.sdf[0][0]).ReadAsArray().shape
         self.AOI = None
         self.data = None
 
     def get_data(self):
         self.data = np.zeros((self.img_shp[0], self.img_shp[1], self.num_bands))
         for i in range(self.num_bands):
-            self.data[:, :, i] = gdal.Open(sdf[i][0]).ReadAsArray()
+            self.data[:, :, i] = gdal.Open(self.sdf[i][0]).ReadAsArray()
 
-    def save_as_npy(self,save_folder=os.getcwd()):
-        np.save(save_folder,self.data)
-        print('dataset saved in .npy format at this location:',save_folder )
-
-
-
-
+    def save_as_npy(self, save_folder=os.getcwd()):
+        np.save(save_folder + '/data', self.data)
+        print('dataset saved in .npy format at this location:', save_folder)
 
 
 
