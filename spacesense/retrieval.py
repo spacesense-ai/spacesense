@@ -3,7 +3,10 @@ import tensorflow as tf
 
 class RSIF(object)
     def __init__(self):
-        """
+        """ Reconstructed Solar Induced Fluorescence
+
+        Parameters
+        ----------
 
         """
     def train(self):
@@ -12,13 +15,27 @@ class RSIF(object)
         :return:
         '''
 
-    def predict(self):
+    def predict(self,X):
         '''
 
         :return:
         '''
+    def plot_performance(self):
+        '''
+
+        :return:
+        '''
+
     def gentine_lab(self,):
         '''
+        Parameters
+        ----------
+
+        Notes
+        -----
+
+        References
+        ----------
         This algorithm takes reference from the work described in this paper:
         Gentine, P., & Alemohammad, S. H. (2018). Reconstructed Solar-Induced Fluorescence: A machine learning
         vegetation product based on MODIS surface reflectance to reproduce GOME-2 solar-induced fluorescence.
