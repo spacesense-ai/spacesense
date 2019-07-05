@@ -20,7 +20,7 @@ class download(object):
         self.startdate = None
         self.enddate = None
 
-    def sentinel(self,download_type='full',username,password, roi_polygon=None,startdate=None,enddate=None,cloudcover_max=5,platformname='Sentinel-2'):
+    def sentinel(self,username,password,download_type='full', roi_polygon=None,startdate=None,enddate=None,cloudcover_max=5,platformname='Sentinel-2'):
         '''
 
         :param download_type:
@@ -47,7 +47,7 @@ class download(object):
         if download_type == 'full':
             api.download(product_id)
 
-        if download_type='ROI_polygon':
+        if download_type=='ROI_polygon':
             if roi_polygon.split('.')[-1] =='geojson':
                 footprint = geojson_to_wkt(read_geojson(self.roi_polygon))
 
