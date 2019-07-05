@@ -142,7 +142,7 @@ class cnn_custom_rsif_example(object):
                                         verbose=1)
 
 
-class SVR(object):
+class SVR_retrieval(object):
 
     def __init__(self):
         """
