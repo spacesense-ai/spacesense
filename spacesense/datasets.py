@@ -1,9 +1,8 @@
 """
-
+CLASSIFICATION MODULE
 
 """
 import os
-import sentinelhub as sh
 import sentinelsat as ss
 from sentinelsat import SentinelAPI, read_geojson, geojson_to_wkt
 import matplotlib.pyplot as plt
@@ -11,16 +10,19 @@ from datetime import date
 from osgeo import gdal
 import numpy as np
 
-class download(object):
-    def __init__(self):
 
-        self.username = None
-        self.password = None
+class download_sentinel(object):
+    def __init__(self, username, password):
+
+        self.username = username
+        self.password = password
         self.roi_polygon = None
         self.startdate = None
         self.enddate = None
+        self.list_products = None
 
-    def sentinel(self,username,password,download_type='full', roi_polygon=None,startdate=None,enddate=None,cloudcover_max=5,platformname='Sentinel-2'):
+    def sentinel(self, download_type='ROI_polygon', roi_polygon=None, startdate=None, enddate=None, cloudcover_max=5,
+                 platformname='Sentinel-2'):
         '''
 
         :param download_type:
@@ -33,8 +35,7 @@ class download(object):
         :param platformname:
         :return:
         '''
-        self.username = username
-        self.password = password
+
         if startdate:
             self.startdate = startdate
         if enddate:
@@ -42,28 +43,40 @@ class download(object):
 
         if roi_polygon:
             self.roi_polygon = roi_polygon
-        api = SentinelAPI(self.username,self.password,'https://scihub.copernicus.eu/dhus')
+        self.api = SentinelAPI(self.username, self.password, 'https://scihub.copernicus.eu/dhus')
+
         product_id = None
         if download_type == 'full':
-            api.download(product_id)
+            if product_id:
+                self.api.download(product_id)
+            else:
+                print('product id required')
 
-        if download_type=='ROI_polygon':
-            if roi_polygon.split('.')[-1] =='geojson':
+        if download_type == 'ROI_polygon':
+            if roi_polygon.split('.')[-1] == 'geojson':
                 footprint = geojson_to_wkt(read_geojson(self.roi_polygon))
 
-                products = api.query(footprint,
-                             date=(self.startdate, self.enddate),
-                             platformname='Sentinel-2',
-                             cloudcoverpercentage=(0, cloudcover_max))
+                products = self.api.query(footprint,
+                                          date=(self.startdate, self.enddate),
+                                          platformname='Sentinel-2',
+                                          cloudcoverpercentage=(0, cloudcover_max))
+                self.list_products = list(products.items())
+
+    def download_files(self, list_product_ids):
+        for product_id in list_product_ids:
+            self.api.download(product_id)
 
 
-    def modis(self):
-        '''
+class download_modis(object):
+    """
 
-        TBD
-        :return:
-        '''
-        return None
+    TBD
+    :return:
+    """
+
+    def __init__(self):
+        """
+        """
 
 
 class read_modis(object):
