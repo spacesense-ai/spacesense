@@ -142,7 +142,8 @@ class cnn_custom_rsif_example(object):
                                         verbose=1)
 
 
-class SVR_simple(object):
+class SVR(object):
+
     def __init__(self):
         """
         Simple Support Vector Machine for regression:
