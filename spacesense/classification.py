@@ -1,11 +1,13 @@
-import os
-import sklearn
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras import optimizers
 from osgeo import ogr, gdal
 from rasterio.plot import show, show_hist
+from sklearn.svm import SVC
+from sklearn.model_selection import train_test_split
+from sklearn import preprocessing
+from sklearn.model_selection import GridSearchCV
 
 
 class by_pixel(object):
@@ -19,7 +21,7 @@ class by_pixel(object):
         self.model = None
         self.model_archi = None
 
-    def train(self, x, y, model_architecture=gentine_lab_rsif(), test_data_size=0.10):
+    def train(self, x, y, model_architecture=cnn_custom(), test_data_size=0.10):
         '''
 
         :return:
@@ -71,6 +73,35 @@ class by_pixel(object):
         :return:
         '''
 
+    def upload_model(self, model_path):
+        self.model = load_model(model_path)
+        print('model successfully loaded')
+        print('Input shape:', self.model.input_shape[1])
+        print(self.model.summary())
+
+
+
+""" Available model architectures"""
+
+class SVC_by_pixel(object):
+    def __init__(self):
+        """
+        Simple Support Vector Machine for regression
+        """
+        self.model = None
+        self.svc_models = None
+
+    def build_model(self):
+        self.svc_models = GridSearchCV(SVC(kernel='rbf', gamma=0.1), cv=5,
+                                       param_grid={"C": [1e0, 1e1, 1e2, 1e3],
+                                                   "gamma": np.logspace(-2, 2, 5)})
+
+    def fit(self, X_train, y_train):
+        self.build_model()
+        self.svc_models.fit(X_train, y_train)
+        self.model = self.svc_models.best_estimator_
+        self.model.fit(X_train, y_train)
+
 
 class cnn_custom(object):
     def __init__(self):
@@ -114,5 +145,4 @@ class cnn_custom(object):
                                         validation_split=validation_split,
                                         verbose=1)
 
-    def load_model(path):
 
