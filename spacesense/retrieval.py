@@ -108,14 +108,14 @@ class SVR_retrieval(object):
     def fit(self, X_train, y_train):
         self.build_model()
         self.svr_models.fit(X_train, y_train)
-        self.model = svr_models.best_estimator_
+        self.model = self.svr_models.best_estimator_
         self.model.fit(X_train, y_train)
 
 
 """ Base Class """
 
 
-class RSIF(object)
+class RSIF(object):
     def __init__(self):
         """ Reconstructed Solar Induced Fluorescence
 
