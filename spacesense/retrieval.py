@@ -51,7 +51,7 @@ class RSIF(object)
 
         # to add : metrics
 
-    def predict(self,X):
+    def predict(self,x):
         '''
 
         :return:

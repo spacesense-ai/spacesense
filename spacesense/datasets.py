@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 from datetime import date
 from osgeo import gdal
 import numpy as np
+from glob import glob
+import time
 
 
 class download_sentinel(object):
@@ -65,6 +67,18 @@ class download_sentinel(object):
     def download_files(self, list_product_ids):
         for product_id in list_product_ids:
             self.api.download(product_id)
+
+
+class download_modis(object):
+    """
+
+    TBD
+    :return:
+    """
+
+    def __init__(self):
+        """
+        """
 
 
 class download_modis(object):
