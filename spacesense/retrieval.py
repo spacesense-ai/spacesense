@@ -12,72 +12,6 @@ import numpy as np
 
 
 
-
-class RSIF(object)
-    def __init__(self):
-        """ Reconstructed Solar Induced Fluorescence
-
-        Parameters
-        ----------
-
-        """
-        self.model = None
-        self.model_archi =None
-
-    def train(self,x,y, model_architecture=gentine_lab_rsif(),test_data_size=0.10):
-        '''
-
-        :return:
-        '''
-        if len(x.shape) == 3:
-            X = x.reshape(x.shape[0] * x.shape[1], x.shape[2])
-        else:
-            X = x
-        y = np.ravel(y)
-
-        # split dataset into train and test
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_data_size, random_state=1)
-
-        # scale X_train and X_test
-        X_train = preprocessing.scale(X_train, axis=1)
-        X_test = preprocessing.scale(X_test, axis=1)
-
-        self.model_archi = model_architecture
-        self.model_archi.fit(X_train,
-                        y_train)
-        self.model = self.model_archi.model
-
-        y_pred = self.model.predict(X_test)
-
-        # to add : metrics
-
-    def predict(self,x):
-        '''
-
-        :return:
-        '''
-        if len(x.shape) == 3:
-            x_pred = x.reshape(x.shape[0] * x.shape[1], x.shape[2])
-        else:
-            x_pred = x
-        x_scaled = preprocessing.scale(x_pred, axis=1)
-        y_pred = self.model.predict(x_scaled)
-
-        if len(x.shape) == 3:
-            y_pred_reshaped = y_pred.reshape(x.shape[0], x.shape[1])
-        else:
-            y_pred_reshaped = y_pred
-
-        return y_pred_reshaped
-
-    def plot_performance(self):
-        '''
-
-        :return:
-        '''
-
-
-
 """ Available model architectures"""
 class gentine_lab_rsif(object):
     """
@@ -176,4 +110,71 @@ class SVR_retrieval(object):
         self.svr_models.fit(X_train, y_train)
         self.model = svr_models.best_estimator_
         self.model.fit(X_train, y_train)
+
+
+""" Base Class """
+
+
+class RSIF(object)
+    def __init__(self):
+        """ Reconstructed Solar Induced Fluorescence
+
+        Parameters
+        ----------
+
+        """
+        self.model = None
+        self.model_archi =None
+
+    def train(self,x,y, model_architecture=gentine_lab_rsif(),test_data_size=0.10):
+        '''
+
+        :return:
+        '''
+        if len(x.shape) == 3:
+            X = x.reshape(x.shape[0] * x.shape[1], x.shape[2])
+        else:
+            X = x
+        y = np.ravel(y)
+
+        # split dataset into train and test
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_data_size, random_state=1)
+
+        # scale X_train and X_test
+        X_train = preprocessing.scale(X_train, axis=1)
+        X_test = preprocessing.scale(X_test, axis=1)
+
+        self.model_archi = model_architecture
+        self.model_archi.fit(X_train,
+                        y_train)
+        self.model = self.model_archi.model
+
+        y_pred = self.model.predict(X_test)
+
+        # to add : metrics
+
+    def predict(self,x):
+        '''
+
+        :return:
+        '''
+        if len(x.shape) == 3:
+            x_pred = x.reshape(x.shape[0] * x.shape[1], x.shape[2])
+        else:
+            x_pred = x
+        x_scaled = preprocessing.scale(x_pred, axis=1)
+        y_pred = self.model.predict(x_scaled)
+
+        if len(x.shape) == 3:
+            y_pred_reshaped = y_pred.reshape(x.shape[0], x.shape[1])
+        else:
+            y_pred_reshaped = y_pred
+
+        return y_pred_reshaped
+
+    def plot_performance(self):
+        '''
+
+        :return:
+        '''
 

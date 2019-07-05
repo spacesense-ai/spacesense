@@ -10,6 +10,73 @@ from sklearn import preprocessing
 from sklearn.model_selection import GridSearchCV
 
 
+
+""" Available model architectures"""
+
+class SVC_by_pixel(object):
+    def __init__(self):
+        """
+        Simple Support Vector Machine for regression
+        """
+        self.model = None
+        self.svc_models = None
+
+    def build_model(self):
+        self.svc_models = GridSearchCV(SVC(kernel='rbf', gamma=0.1), cv=5,
+                                       param_grid={"C": [1e0, 1e1, 1e2, 1e3],
+                                                   "gamma": np.logspace(-2, 2, 5)})
+
+    def fit(self, X_train, y_train):
+        self.build_model()
+        self.svc_models.fit(X_train, y_train)
+        self.model = self.svc_models.best_estimator_
+        self.model.fit(X_train, y_train)
+
+
+class cnn_custom(object):
+    def __init__(self):
+        """
+        REF
+        """
+        self.model = None
+        self.fit_model = None
+
+    def build_model(self, input_shp, output_shp):
+        hidden1_num_units = 200
+        hidden2_num_units = 200
+        hidden3_num_units = 200
+        hidden4_num_units = 200
+
+        model = keras.Sequential([
+            Dense(input_dim=input_shp, kernel_regularizer=l2(0.0001), activation='relu', units=hidden1_num_units),
+            Dropout(0.2),
+            Dense(input_dim=hidden1_num_units, kernel_regularizer=l2(0.0001), activation='relu',
+                  units=hidden2_num_units),
+            Dropout(0.2),
+            Dense(input_dim=hidden2_num_units, kernel_regularizer=l2(0.0001), activation='relu',
+                  units=hidden3_num_units),
+            Dropout(0.1),
+            Dense(input_dim=hidden3_num_units, kernel_regularizer=l2(0.0001), activation='relu',
+                  units=hidden4_num_units),
+            Dropout(0.1),
+            Dense(input_dim=hidden4_num_units, activation='softmax', units=output_shp),
+
+        ])
+        sgd = optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+        model.compile(loss='sparse_categorical_crossentropy',
+                      optimizer='sgd',
+                      metrics=['accuracy'])
+        self.model = model
+
+    def fit(self, X_train, y_train, epochs=100, batch_size=100, validation_split=0.1, verbose=1):
+        self.build_model(X_train.shape[-1], 1)
+        self.fit_model = self.model.fit(X_train, y_train, epochs=100,
+                                        batch_size=batch_size,
+                                        validation_split=validation_split,
+                                        verbose=1)
+
+
+""" Base Class"""
 class by_pixel(object):
     def __init__(self):
         """ Reconstructed Solar Induced Fluorescence
@@ -78,71 +145,5 @@ class by_pixel(object):
         print('model successfully loaded')
         print('Input shape:', self.model.input_shape[1])
         print(self.model.summary())
-
-
-
-""" Available model architectures"""
-
-class SVC_by_pixel(object):
-    def __init__(self):
-        """
-        Simple Support Vector Machine for regression
-        """
-        self.model = None
-        self.svc_models = None
-
-    def build_model(self):
-        self.svc_models = GridSearchCV(SVC(kernel='rbf', gamma=0.1), cv=5,
-                                       param_grid={"C": [1e0, 1e1, 1e2, 1e3],
-                                                   "gamma": np.logspace(-2, 2, 5)})
-
-    def fit(self, X_train, y_train):
-        self.build_model()
-        self.svc_models.fit(X_train, y_train)
-        self.model = self.svc_models.best_estimator_
-        self.model.fit(X_train, y_train)
-
-
-class cnn_custom(object):
-    def __init__(self):
-        """
-        REF
-        """
-        self.model = None
-        self.fit_model = None
-
-    def build_model(self, input_shp, output_shp):
-        hidden1_num_units = 200
-        hidden2_num_units = 200
-        hidden3_num_units = 200
-        hidden4_num_units = 200
-
-        model = keras.Sequential([
-            Dense(input_dim=input_shp, kernel_regularizer=l2(0.0001), activation='relu', units=hidden1_num_units),
-            Dropout(0.2),
-            Dense(input_dim=hidden1_num_units, kernel_regularizer=l2(0.0001), activation='relu',
-                  units=hidden2_num_units),
-            Dropout(0.2),
-            Dense(input_dim=hidden2_num_units, kernel_regularizer=l2(0.0001), activation='relu',
-                  units=hidden3_num_units),
-            Dropout(0.1),
-            Dense(input_dim=hidden3_num_units, kernel_regularizer=l2(0.0001), activation='relu',
-                  units=hidden4_num_units),
-            Dropout(0.1),
-            Dense(input_dim=hidden4_num_units, activation='softmax', units=output_shp),
-
-        ])
-        sgd = optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-        model.compile(loss='sparse_categorical_crossentropy',
-                      optimizer='sgd',
-                      metrics=['accuracy'])
-        self.model = model
-
-    def fit(self, X_train, y_train, epochs=100, batch_size=100, validation_split=0.1, verbose=1):
-        self.build_model(X_train.shape[-1], 1)
-        self.fit_model = self.model.fit(X_train, y_train, epochs=100,
-                                        batch_size=batch_size,
-                                        validation_split=validation_split,
-                                        verbose=1)
 
 
