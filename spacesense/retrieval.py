@@ -164,3 +164,4 @@ class SVR(object):
         self.svr_models.fit(X_train, y_train)
         self.model = svr_models.best_estimator_
         self.model.fit(X_train, y_train)
+        
