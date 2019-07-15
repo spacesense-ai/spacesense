@@ -26,7 +26,12 @@ RUN pip3 install  numpy \
 		ipython \
 		jupyter \
 		matplotlib \
-		sentinelsat
+		sentinelsat \
+		sentinelhub 
+
+# Change the LANG to UTF8
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 
 # Settings for Jupyter-notebooks
 EXPOSE 8888
