@@ -13,7 +13,6 @@ RUN apt-get update && \
 	apt-get install -qqy \
 	git \
 	wget \
-	ipython3 \
 	vim \
 	python3-pip 
 
@@ -21,7 +20,13 @@ RUN apt-get update && \
 # RUN rm /usr/bin/python /usr/bin/pip & ln -s /usr/bin/python3 /usr/bin/python & \
 #    ln -s /usr/bin/pip3 /usr/bin/pip
 
-RUN pip3 install  numpy scipy pandas jupyter
+RUN pip3 install  numpy \
+		scipy \
+		pandas \
+		ipython \
+		jupyter \
+		matplotlib \
+		sentinelsat
 
 # Settings for Jupyter-notebooks
 EXPOSE 8888

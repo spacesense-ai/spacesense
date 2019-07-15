@@ -20,4 +20,15 @@ docker run -it  spacesence/dev:latest
 ```
 This will lauche the image.
 The Entrypoint of the docker image is jupyter-notebook, exposed to the port `8888`.
-You will need to upen it on you browser
+You will need to upen it on you browser, and expose it when runing the image:
+` docker run -it -p 8888:8888 spacesence/dev:latest`
+
+	You can add a volume (like the folder where you work) with `-v <local path>:<path in docker>` 
+
+4. Using jupyter
+the docker image will lauch jupyter.
+You will need to copy and past the URL given by jupyter, with its token.
+It should looks like
+```
+http://127.0.0.1:8888/?token=b1903988532dce2f3f3682e9add6e56c1b7ef518122c04f4
+```
