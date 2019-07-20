@@ -63,10 +63,13 @@ class download_sentinel(object):
                                           platformname='Sentinel-2',
                                           cloudcoverpercentage=(0, cloudcover_max))
                 self.list_products = list(products.items())
+        print(len(self.list_products), ' products found')
 
-    def download_files(self, list_product_ids):
+    def download_files(self, list_product_ids,directory_path='.'):
         for product_id in list_product_ids:
-            self.api.download(product_id)
+            self.api.download(product_id, directory_path=directory_path)
+    
+    """ add function to display product AOI Polygon"""
 
 
 class download_modis(object):
