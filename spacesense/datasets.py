@@ -68,7 +68,7 @@ class download_sentinel(object):
     def download_files(self, list_product_ids,directory_path='.'):
         for product_id in list_product_ids:
             self.api.download(product_id, directory_path=directory_path)
-    
+
     """ add function to display product AOI Polygon"""
 
 
