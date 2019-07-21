@@ -192,12 +192,12 @@ class read_sentinel(object):
         print('all bands saved as numpy arrays for faster processing in \
               %s seconds' % (time.time() - start_time))
     @staticmethod
-    def get_ndvi(data):
+    def get_ndvi(data,nir_index=7,red_index=3):
         """
         NDVI = (b_nir - b_red)/(b_nir + b_red)
         :return: NDVI values for each pixel
         """
-        ndvi = (data[:,:,7] - data[:,:,3])/(data[:,:,7] + data[:,:,3])
+        ndvi = (data[:,:,nir_index] - data[:,:,red_index])/(data[:,:,nir_index] + data[:,:,red_index])
 
         return ndvi
 
