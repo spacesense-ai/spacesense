@@ -1,5 +1,5 @@
 """
-CLASSIFICATION MODULE
+DATASETS: download and perform basic operations
 
 """
 import os
@@ -203,16 +203,41 @@ class read_sentinel(object):
         TBD
         :return:
         """
-        
+
     @staticmethod
     def get_ndvi(data,nir_index=7,red_index=3):
         """
+        Normalized difference vegetation index
         NDVI = (b_nir - b_red)/(b_nir + b_red)
         :return: NDVI values for each pixel
         """
         ndvi = (data[:,:,nir_index] - data[:,:,red_index])/(data[:,:,nir_index] + data[:,:,red_index])
 
         return ndvi
+
+    @staticmethod
+    def get_ndwi(data, nir_index=7, green_index=2,swir_index=10, option=1):
+        """
+        Normalized difference water index
+
+        option 1:
+        NDWI = (b_green - b_nir)/(b_nir + b_green)
+
+        option 2:
+        NDWI = (b_nir - b11_swir)/(b_nir + b11_swir)
+        :return: NDWI values for each pixel
+        """
+        if option==1:
+            ndwi = (data[:, :, green_index] - data[:, :, nir_index]) / (data[:, :, nir_index] + data[:, :, green_index])
+        elif option==2:
+            """
+            needs resampling band 11 SWIR to 10x10 or band 8 NIR to 20x20
+            """
+            ndwi = (data[:, :, nir_index] - data[:, :, swir_index]) / (data[:, :, nir_index] + data[:, :, swir_index])
+
+
+        return ndwi
+
 
 
 
