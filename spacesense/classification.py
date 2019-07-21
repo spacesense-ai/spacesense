@@ -34,6 +34,29 @@ class SVC_by_pixel(object):
         self.model.fit(X_train, y_train)
 
 
+class land_use(object):
+    def __init__(self):
+        """
+        Simple Support Vector Machine for regression
+        """
+        self.model = None
+        self.svc_models = None
+
+    def build_model(self):
+        """
+        TBD
+
+        :return: ML model to classify forest_cover
+        """
+
+    def fit(self, X_train, y_train):
+        self.build_model()
+        self.svc_models.fit(X_train, y_train)
+        self.model = self.svc_models.best_estimator_
+        self.model.fit(X_train, y_train)
+
+
+
 class cnn_custom(object):
     def __init__(self):
         """
