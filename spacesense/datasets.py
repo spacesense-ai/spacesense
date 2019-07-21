@@ -113,7 +113,7 @@ class read_sentinel(object):
     def __init__(self, folder_path, img_type='sentinel_2'):
         self.img_type = img_type
         self.folder_path = folder_path
-        self.band_files = sorted(glob(self.folder_path + '/*.jp2'))
+        self.band_files = np.array(sorted(glob(self.folder_path + '/*B*.jp2')))
         self.band_details = [file.split('_')[-1].split('.')[0] for file in self.band_files]
         im = gdal.Open(self.band_files[1])
         arf_base = im.ReadAsArray()
@@ -123,31 +123,43 @@ class read_sentinel(object):
         self.AOI = None
         self.data = None
 
-    def get_data(self, bandfiles, row_start=0, col_start=0, row_len=1000, col_len=1000):
+    def get_data(self, bandfiles=0, row_start=0, col_start=0, row_len=1000, col_len=1000,save_as_npy=False):
         """
         1. loads from npy files for efficiency
         2. order of bands: [01,02,03,04,05,06,07,08,09,10,11,12,8A]
 
         """
-        if bandfiles == None:
-            bandfiles = self.band_files
-        npy_files = sorted(glob(self.folder_path + '/*.npy'))
-        if len(npy_files) == 0:
-            if self.img_type == 'sentinel-2':
-                self.sentinel_2_remap()
 
         self.row_len = row_len
         self.col_len = col_len
         self.row_start = row_start
         self.col_start = col_start
+
+        if bandfiles == 0:
+            bandfiles = self.band_files
+
         input_bands = bandfiles
         num_bands = len(input_bands)
         data = np.zeros((self.row_len, self.col_len, num_bands))
-        # one band info for all pixels loaded in each iteration
-        for i in range(num_bands):
-            arf = np.load(input_bands[i])
-            ap1 = arf[row_start:row_start + row_len, col_start:col_start + col_len]
-            data[:, :, i] = ap1
+
+        if save_as_npy:
+            # needs some more debugging here
+            npy_files = sorted(glob(self.folder_path + '/*.npy'))
+            if len(npy_files) == 0:
+                if self.img_type == 'sentinel-2':
+                    self.sentinel_2_remap()
+            # one band info for all pixels loaded in each iteration
+            for i in range(num_bands):
+                arf = np.load(npy_files[i])
+                ap1 = arf[row_start:row_start + row_len, col_start:col_start + col_len]
+                data[:, :, i] = ap1
+        else:
+            for i in range(num_bands):
+                arf = gdal.Open(bandfiles[i])
+                ap1 = arf.ReadAsArray()
+                ap1 = ap1[row_start:row_start + row_len, col_start:col_start + col_len]
+                data[:, :, i] = ap1
+        self.data = data
 
     def save_as_npy(self, save_folder=os.getcwd()):
         np.save(save_folder + '/data', self.data)
