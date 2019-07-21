@@ -107,6 +107,12 @@ class read_modis(object):
         np.save(save_folder + '/data', self.data)
         print('dataset saved in .npy format at this location:', save_folder)
 
+    def remove_nan(self):
+        """
+        TBD
+        :return:
+        """
+
 
 class read_sentinel(object):
 
@@ -191,6 +197,13 @@ class read_sentinel(object):
                 print(self.band_details[b], ar.shape)
         print('all bands saved as numpy arrays for faster processing in \
               %s seconds' % (time.time() - start_time))
+
+    def remove_nan(self):
+        """
+        TBD
+        :return:
+        """
+        
     @staticmethod
     def get_ndvi(data,nir_index=7,red_index=3):
         """
@@ -200,5 +213,6 @@ class read_sentinel(object):
         ndvi = (data[:,:,nir_index] - data[:,:,red_index])/(data[:,:,nir_index] + data[:,:,red_index])
 
         return ndvi
+
 
 
