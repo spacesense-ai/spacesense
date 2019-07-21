@@ -109,6 +109,7 @@ class read_modis(object):
 
 
 class read_sentinel(object):
+
     def __init__(self, folder_path, img_type='sentinel_2'):
         self.img_type = img_type
         self.folder_path = folder_path
@@ -123,7 +124,11 @@ class read_sentinel(object):
         self.data = None
 
     def get_data(self, bandfiles, row_start=0, col_start=0, row_len=1000, col_len=1000):
-        # loads from npy files for efficiency
+        """
+        1. loads from npy files for efficiency
+        2. order of bands: [01,02,03,04,05,06,07,08,09,10,11,12,8A]
+
+        """
         if bandfiles == None:
             bandfiles = self.band_files
         npy_files = sorted(glob(self.folder_path + '/*.npy'))
@@ -174,6 +179,14 @@ class read_sentinel(object):
                 print(self.band_details[b], ar.shape)
         print('all bands saved as numpy arrays for faster processing in \
               %s seconds' % (time.time() - start_time))
+    @staticmethod
+    def get_ndvi(data):
+        """
+        NDVI = (b_nir - b_red)/(b_nir + b_red)
+        :return: NDVI values for each pixel
+        """
+        ndvi = (data[:,:,7] - data[:,:,3])/(data[:,:,7] + data[:,:,3])
+
+        return ndvi
 
 
-    
