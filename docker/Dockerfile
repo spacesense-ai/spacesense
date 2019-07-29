@@ -27,10 +27,7 @@ RUN pip3 install  numpy \
 		jupyter \
 		matplotlib \
 		sentinelsat \
-		sentinelhub \
-		tensorflow==1.10 \ 
-                rasterio  \
-		sklearn
+		sentinelhub 
 
 # Change the LANG to UTF8
 ENV LANG=C.UTF-8
@@ -39,5 +36,4 @@ ENV LC_ALL=C.UTF-8
 # Settings for Jupyter-notebooks
 # EXPOSE 8888
 # ENTRYPOINT ["jupyter-notebook", "--allow-root", "--port=8888", "--no-browser", "--ip=0.0.0.0"] 
-
 
