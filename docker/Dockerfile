@@ -27,7 +27,10 @@ RUN pip3 install  numpy \
 		jupyter \
 		matplotlib \
 		sentinelsat \
-		sentinelhub 
+		sentinelhub \
+		tensorflow==1.10 \ 
+                rasterio  \
+		sklearn
 
 # Change the LANG to UTF8
 ENV LANG=C.UTF-8
