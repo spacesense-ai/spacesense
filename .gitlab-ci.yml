@@ -4,3 +4,9 @@ test:pylint:
     script:
         - pip3 install pylint --quiet
         - pylint --ignored-classes=_socketobject spacesense/
+
+test:pytest:
+    image: spacesence/spacesence:latest
+    script:
+        - pip3 install pytest --quiet
+        - pytest tests/*
