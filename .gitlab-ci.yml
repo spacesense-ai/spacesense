@@ -1,0 +1,6 @@
+
+test:pylint:
+    image: spacesence/spacesence:latest
+    script:
+        - pip3 install pylint --quiet
+        - pylint --ignored-classes=_socketobject spacesense/
