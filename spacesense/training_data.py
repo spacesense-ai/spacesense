@@ -3,10 +3,14 @@ To assist in building training dataset
 
 
 """
-import shapefile
-import matplotlib
 import os
-from shapely.geometry import Point,Polygon,LineString,MultiPolygon
+import zipfile
+import glob
+import shapefile
+from shapely.geometry import Polygon
+
+
+
 
 class manage():
     def __init__(self,folder='training_files/'):
@@ -23,6 +27,45 @@ class manage():
             plt.show()
 
 
+class EuroSAT(object):
+    def __init__(self):
+        """
+        Dataset source and reference: https://github.com/phelber/eurosat
+        """
+        self.data_path_all_bands = 'data/ds/images/remote_sensing/otherDatasets/sentinel_2/tif'
+        self.data_path_rgb = 'data/2750'
+    def download_all_bands(self):
+        """
+        :return: folder with training data (2.9GB)
+        """
+        os.system("mkdir data")
+        os.system("wget http://madm.dfki.de/files/sentinel/EuroSATallBands.zip -P data/")
+        file_name = 'data/EuroSATallBands.zip'
+
+        with zipfile.ZipFile(file_name, 'r') as zip_ref:
+            zip_ref.extractall('data/')
+
+        self.data_path_all_bands = 'data/ds/images/remote_sensing/otherDatasets/sentinel_2/tif'
+        print('EuroSAT all bands data downloaded !')
+
+    def download_rgb(self):
+        """
+        :return: folder with RGB training data (93MB)
+        """
+        os.system("mkdir data")
+        os.system("wget madm.dfki.de/files/sentinel/EuroSAT.zip -P data/")
+        file_name = 'data/EuroSAT.zip'
+
+        with zipfile.ZipFile(file_name, 'r') as zip_ref:
+            zip_ref.extractall('data/')
+
+        self.data_path_rgb = 'data/2750'
+        print('EuroSAT RGB data downloaded !')
+
+    def get_all_bands(self):
+
+
+    def get_rgb(self):
 
 
 
