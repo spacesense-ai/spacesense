@@ -36,7 +36,7 @@ class EuroSAT(object):
         self.data_path_rgb = 'data/2750'
         self.n_labels = 10
         self.label_names = ['AnnualCrop','Forest','HerbaceousVegetation','Highway','Industrial', 'Pasture',
-                            'PermanentCrop','Residential', 'River','SeaLake']
+                            'PermanentCrop','Residential', 'River', 'SeaLake']
 
         self.n_samples = [3000, 3000, 3000, 2500, 2500, 2000, 2500, 3000, 2500, 3000]
         self.info = {'total sample size': 27000,
@@ -72,18 +72,32 @@ class EuroSAT(object):
         self.data_path_rgb = 'data/2750'
         print('EuroSAT RGB data downloaded !')
 
-    def get_all_bands(self):
+    def fetch_data(self,type='all_bands',labels='all'):
         """
 
+        :param type:
+        :param labels:
         :return:
         """
+        if type=='all_bands':
+            paths = sorted(glob.glob(self.data_path_all_bands+'/*'))
+
+        elif type=='rgb':
+            paths = sorted(glob.glob(self.data_path_rgb+'/*'))
 
 
-    def get_rgb(self):
-        """
-        
-        :return:
-        """
+    @staticmethod
+    def all_bands(self,labels='all'):
+
+        fetch_all_labels = None
+        fetch_single_label = None
+
+
+    @staticmethod
+    def rgb(self,labels='all'):
+
+        fetch_all_labels = None
+        fetch_single_label = None
 
 
 
