@@ -34,6 +34,16 @@ class EuroSAT(object):
         """
         self.data_path_all_bands = 'data/ds/images/remote_sensing/otherDatasets/sentinel_2/tif'
         self.data_path_rgb = 'data/2750'
+        self.n_labels = 10
+        self.label_names = ['AnnualCrop','Forest','HerbaceousVegetation','Highway','Industrial', 'Pasture',
+                            'PermanentCrop','Residential', 'River','SeaLake']
+
+        self.n_samples = [3000, 3000, 3000, 2500, 2500, 2000, 2500, 3000, 2500, 3000]
+        self.info = {'total sample size': 27000,
+                     'labels':{}}
+        for i in range(len(names)):
+            self.info['labels'][self.label_names[i]]= self.n_samples[i]
+
     def download_all_bands(self):
         """
         :return: folder with training data (2.9GB)
