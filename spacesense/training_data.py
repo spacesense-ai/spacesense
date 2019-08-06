@@ -73,9 +73,18 @@ class EuroSAT(object):
         print('EuroSAT RGB data downloaded !')
 
     def get_all_bands(self):
+        """
+
+        :return:
+        """
 
 
     def get_rgb(self):
+        """
+        
+        :return:
+        """
+
 
 
 
