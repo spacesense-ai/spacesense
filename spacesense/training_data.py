@@ -8,9 +8,11 @@ import zipfile
 import glob
 import shapefile
 from shapely.geometry import Polygon
-
-
-
+from os.path import exists
+from urllib.request import urlretrieve
+import numpy as np
+from glob import glob
+import time
 
 class manage():
     def __init__(self,folder='training_files/'):
@@ -41,64 +43,148 @@ class EuroSAT(object):
         self.n_samples = [3000, 3000, 3000, 2500, 2500, 2000, 2500, 3000, 2500, 3000]
         self.info = {'total sample size': 27000,
                      'labels':{}}
-        for i in range(len(names)):
+        for i in range(len(self.label_names)):
             self.info['labels'][self.label_names[i]]= self.n_samples[i]
 
-    def download_all_bands(self):
+    def download_all_bands(self,save_as_npy=False):
         """
         :return: folder with training data (2.9GB)
         """
-        os.system("mkdir data")
-        os.system("wget http://madm.dfki.de/files/sentinel/EuroSATallBands.zip -P data/")
-        file_name = 'data/EuroSATallBands.zip'
+        if exists(self.data_path_all_bands):
+            print('dataset is already available at: ', os.path.abspath(self.data_path_all_bands))
 
-        with zipfile.ZipFile(file_name, 'r') as zip_ref:
-            zip_ref.extractall('data/')
+        else:
+            os.system("mkdir data")
+            os.system("wget http://madm.dfki.de/files/sentinel/EuroSATallBands.zip -P data/")
+            file_name = 'data/EuroSATallBands.zip'
 
-        self.data_path_all_bands = 'data/ds/images/remote_sensing/otherDatasets/sentinel_2/tif'
-        print('EuroSAT all bands data downloaded !')
+            with zipfile.ZipFile(file_name, 'r') as zip_ref:
+                zip_ref.extractall('data/')
 
-    def download_rgb(self):
+            self.data_path_all_bands = 'data/ds/images/remote_sensing/otherDatasets/sentinel_2/tif'
+            print('EuroSAT all bands data downloaded !')
+
+    def download_rgb(self,save_as_npy=False):
         """
         :return: folder with RGB training data (93MB)
         """
-        os.system("mkdir data")
-        os.system("wget madm.dfki.de/files/sentinel/EuroSAT.zip -P data/")
-        file_name = 'data/EuroSAT.zip'
+        if exists(self.data_path_rgb):
+            print('dataset is already available at: ', os.path.abspath(self.data_path_rgb))
+        else:
+            os.system("mkdir data")
+            os.system("wget madm.dfki.de/files/sentinel/EuroSAT.zip -P data/")
+            file_name = 'data/EuroSAT.zip'
 
-        with zipfile.ZipFile(file_name, 'r') as zip_ref:
-            zip_ref.extractall('data/')
+            with zipfile.ZipFile(file_name, 'r') as zip_ref:
+                zip_ref.extractall('data/')
 
-        self.data_path_rgb = 'data/2750'
-        print('EuroSAT RGB data downloaded !')
+            self.data_path_rgb = 'data/2750'
+            print('EuroSAT RGB data downloaded !')
 
     def fetch_data(self,type='all_bands',labels='all'):
         """
 
         :param type:
         :param labels:
-        :return:
+        :return: numpy array
         """
         if type=='all_bands':
             paths = sorted(glob.glob(self.data_path_all_bands+'/*'))
+            if exists(self.data_path_all_bands):
+                data = self.__load_dataset__(labels=labels,type='all_bands')
+
+            else:
+                print('dataset is not available')
+                print('to download the dataset, choose one of the two options:')
+                print('EuroSAT.download_all_bands()')
+                print('or')
+                print('EuroSAT.download_rgb()')
+
 
         elif type=='rgb':
             paths = sorted(glob.glob(self.data_path_rgb+'/*'))
+            if exists(self.data_path_rgb):
+                data = self.__load_dataset__(labels=labels,type='rgb')
 
+            else:
+                print('dataset is not available')
+                print('to download the dataset, choose one of the two options:')
+                print('EuroSAT.download_all_bands()')
+                print('or')
+                print('EuroSAT.download_rgb()')
+
+    def __load_dataset__(self,labels='all',type='all_bands'):
+
+        if type == 'all_bands':
+            data_path = self.data_path_all_bands
+        elif type == 'rgb':
+            data_path = self.data_path_rgb
+
+        if labels == 'all':
+            x = np.zeros((self.info['total sample size'] * 64 * 64, 13))
+            y = np.zeros(self.info['total sample size'] * 64 * 64)
+
+            img_paths = {}
+            i = 0
+            for label in self.label_names:
+                folder_path = os.path.join(self.data_path_all_bands, label)
+                img_paths[label] = glob(folder_path + '/*')
+                folder_path = os.path.join(self.data_path_all_bands, label)
+                img_paths[label] = glob(folder_path + '/*')
+                for img in img_paths[label]:
+                    data = gdal.Open(img).ReadAsArray()
+                    x_img = get_data(data)
+                    n = x_img.shape[0]
+                    x[i:i + n] = x_img
+                    y[i:i + n] = self.label_names.index(label)
+                    i += n
+                print(label + ' data loaded')
+            print('time taken: %d seconds' % (time.time() - start))
+
+
+        else:
+            """
+            check for correct labels
+            iterate on specific labels    
+            """
+            sample_size = 30000
+            x = np.zeros((sample_size * 64 * 64, 13))
+            y = np.zeros(sample_size * 64 * 64)
+
+            img_paths = {}
+            i = 0
+            for label in labels:
+                folder_path = os.path.join(self.data_path_all_bands, label)
+                img_paths[label] = glob(folder_path + '/*')
+                folder_path = os.path.join(self.data_path_all_bands, label)
+                img_paths[label] = glob(folder_path + '/*')
+                for img in img_paths[label]:
+                    data = gdal.Open(img).ReadAsArray()
+                    x_img = get_data(data)
+                    n = x_img.shape[0]
+                    x[i:i + n] = x_img
+                    y[i:i + n] = self.label_names.index(label)
+                    i += n
+                print(label + ' data loaded')
+            print('time taken: %d seconds' % (time.time() - start))
+        return x, y
 
     @staticmethod
-    def all_bands(self,labels='all'):
-
-        fetch_all_labels = None
-        fetch_single_label = None
-
+    def get_data(x):
+        if len(x.shape) == 3:
+            if (x.shape[2] < x.shape[0]) and (x.shape[2] < x.shape[1]):
+                X = x.reshape(x.shape[0] * x.shape[1], x.shape[2])
+            elif (x.shape[0] < x.shape[1]) and (x.shape[0] < x.shape[2]):
+                X = x.reshape(x.shape[1] * x.shape[2], x.shape[0])
+        else:
+            X = x
+        return X
 
     @staticmethod
-    def rgb(self,labels='all'):
-
-        fetch_all_labels = None
-        fetch_single_label = None
-
+    def save_as_npy(dataset,save_folder=os.getcwd(), file_name='data'):
+        path = os.path.join(save_folder,file_name)
+        np.save(path, dataset)
+        print('dataset saved in .npy format at this location:', save_folder)
 
 
 

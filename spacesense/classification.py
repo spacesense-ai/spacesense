@@ -118,7 +118,11 @@ class by_pixel(object):
         :return:
         '''
         if len(x.shape) == 3:
-            X = x.reshape(x.shape[0] * x.shape[1], x.shape[2])
+            if (x.shape[2]<x.shape[0]) and (x.shape[2]<x.shape[1]):
+                X = x.reshape(x.shape[0] * x.shape[1], x.shape[2])
+            elif (x.shape[0]<x.shape[1]) and (x.shape[0]<x.shape[2]):
+                X = x.reshape(x.shape[1] * x.shape[2], x.shape[0])
+                    
         else:
             X = x
         y = np.ravel(y)
