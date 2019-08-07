@@ -219,12 +219,6 @@ class read_sentinel(object):
     def get_ndwi(data, nir_index=7, green_index=2,swir_index=10, option=1):
         """
         Normalized difference water index
-        return ndwi
-
-
-
-
-
 
         option 1:
         NDWI = (b_green - b_nir)/(b_nir + b_green)
@@ -240,3 +234,10 @@ class read_sentinel(object):
             needs resampling band 11 SWIR to 10x10 or band 8 NIR to 20x20
             """
             ndwi = (data[:, :, nir_index] - data[:, :, swir_index]) / (data[:, :, nir_index] + data[:, :, swir_index])
+
+        return ndwi
+    
+
+
+
+
