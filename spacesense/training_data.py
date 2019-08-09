@@ -1,7 +1,6 @@
 """
 To assist in building training dataset
 
-
 """
 import os
 import zipfile
@@ -13,6 +12,9 @@ from urllib.request import urlretrieve
 import numpy as np
 from glob import glob
 import time
+import gdal
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 
 class manage():
     def __init__(self,folder='training_files/'):
@@ -37,16 +39,16 @@ class EuroSAT(object):
         self.data_path_all_bands = 'data/ds/images/remote_sensing/otherDatasets/sentinel_2/tif'
         self.data_path_rgb = 'data/2750'
         self.n_labels = 10
-        self.label_names = ['AnnualCrop','Forest','HerbaceousVegetation','Highway','Industrial', 'Pasture',
-                            'PermanentCrop','Residential', 'River', 'SeaLake']
+        self.label_names = ['AnnualCrop', 'Forest', 'HerbaceousVegetation', 'Highway', 'Industrial', 'Pasture',
+                            'PermanentCrop', 'Residential', 'River', 'SeaLake']
 
         self.n_samples = [3000, 3000, 3000, 2500, 2500, 2000, 2500, 3000, 2500, 3000]
         self.info = {'total sample size': 27000,
-                     'labels':{}}
+                     'labels': {}}
         for i in range(len(self.label_names)):
-            self.info['labels'][self.label_names[i]]= self.n_samples[i]
+            self.info['labels'][self.label_names[i]] = self.n_samples[i]
 
-    def download_all_bands(self,save_as_npy=False):
+    def download_all_bands(self, save_as_npy=False):
         """
         :return: folder with training data (2.9GB)
         """
@@ -64,7 +66,7 @@ class EuroSAT(object):
             self.data_path_all_bands = 'data/ds/images/remote_sensing/otherDatasets/sentinel_2/tif'
             print('EuroSAT all bands data downloaded !')
 
-    def download_rgb(self,save_as_npy=False):
+    def download_rgb(self, save_as_npy=False):
         """
         :return: folder with RGB training data (93MB)
         """
@@ -81,17 +83,17 @@ class EuroSAT(object):
             self.data_path_rgb = 'data/2750'
             print('EuroSAT RGB data downloaded !')
 
-    def fetch_data(self,type='all_bands',labels='all'):
+    def fetch_data(self, type='all_bands', labels='all'):
         """
 
         :param type:
         :param labels:
         :return: numpy array
         """
-        if type=='all_bands':
-            paths = sorted(glob.glob(self.data_path_all_bands+'/*'))
+        if type == 'all_bands':
+            paths = sorted(glob(self.data_path_all_bands + '/*'))
             if exists(self.data_path_all_bands):
-                data = self.__load_dataset__(labels=labels,type='all_bands')
+                X, y = self.__load_dataset__(labels=labels, type='all_bands')
 
             else:
                 print('dataset is not available')
@@ -100,11 +102,10 @@ class EuroSAT(object):
                 print('or')
                 print('EuroSAT.download_rgb()')
 
-
-        elif type=='rgb':
-            paths = sorted(glob.glob(self.data_path_rgb+'/*'))
+        elif type == 'rgb':
+            paths = sorted(glob(self.data_path_rgb + '/*'))
             if exists(self.data_path_rgb):
-                data = self.__load_dataset__(labels=labels,type='rgb')
+                X, y = self.__load_dataset__(labels=labels, type='rgb')
 
             else:
                 print('dataset is not available')
@@ -112,62 +113,61 @@ class EuroSAT(object):
                 print('EuroSAT.download_all_bands()')
                 print('or')
                 print('EuroSAT.download_rgb()')
+        return X, y
 
-    def __load_dataset__(self,labels='all',type='all_bands'):
+    def __load_dataset__(self, labels='all', type='all_bands'):
 
         if type == 'all_bands':
             data_path = self.data_path_all_bands
         elif type == 'rgb':
             data_path = self.data_path_rgb
 
+        start = time.time()
         if labels == 'all':
             x = np.zeros((self.info['total sample size'] * 64 * 64, 13))
             y = np.zeros(self.info['total sample size'] * 64 * 64)
-
-            img_paths = {}
-            i = 0
-            for label in self.label_names:
-                folder_path = os.path.join(self.data_path_all_bands, label)
-                img_paths[label] = glob(folder_path + '/*')
-                folder_path = os.path.join(self.data_path_all_bands, label)
-                img_paths[label] = glob(folder_path + '/*')
-                for img in img_paths[label]:
-                    data = gdal.Open(img).ReadAsArray()
-                    x_img = get_data(data)
-                    n = x_img.shape[0]
-                    x[i:i + n] = x_img
-                    y[i:i + n] = self.label_names.index(label)
-                    i += n
-                print(label + ' data loaded')
-            print('time taken: %d seconds' % (time.time() - start))
-
+            labels = self.label_names
 
         else:
-            """
-            check for correct labels
-            iterate on specific labels    
-            """
-            sample_size = 30000
+            sample_size = np.sum([self.info['labels'][name] for name in labels])
             x = np.zeros((sample_size * 64 * 64, 13))
             y = np.zeros(sample_size * 64 * 64)
 
-            img_paths = {}
-            i = 0
-            for label in labels:
-                folder_path = os.path.join(self.data_path_all_bands, label)
-                img_paths[label] = glob(folder_path + '/*')
-                folder_path = os.path.join(self.data_path_all_bands, label)
-                img_paths[label] = glob(folder_path + '/*')
-                for img in img_paths[label]:
-                    data = gdal.Open(img).ReadAsArray()
-                    x_img = get_data(data)
-                    n = x_img.shape[0]
-                    x[i:i + n] = x_img
-                    y[i:i + n] = self.label_names.index(label)
-                    i += n
-                print(label + ' data loaded')
-            print('time taken: %d seconds' % (time.time() - start))
+        img_paths = {}
+        i = 0
+        for label in labels:
+            folder_path = os.path.join(self.data_path_all_bands, label)
+            img_paths[label] = glob(folder_path + '/*')
+            folder_path = os.path.join(self.data_path_all_bands, label)
+            img_paths[label] = glob(folder_path + '/*')
+            for img in img_paths[label]:
+                data = gdal.Open(img).ReadAsArray()
+                x_img = self.get_data(data)
+                n = x_img.shape[0]
+                x[i:i + n] = x_img
+                y[i:i + n] = self.label_names.index(label)
+                i += n
+            print(label + ' data loaded')
+        print('time taken: %d seconds' % (time.time() - start))
+        print('x.shape: ', x.shape, 'y.shape: ', y.shape)
         return x, y
+
+    def display_sample(self, labels='all'):
+        if labels == 'all':
+            labels = self.label_names
+        for label in labels:
+            if label not in self.label_names:
+                print('unavailable label')
+                print('choose only available label names from "self.label_names" ')
+                break
+            else:
+                i = np.random.choice(range(self.info['labels'][label]))
+                folder_path = os.path.join(self.data_path_rgb, label)
+                images = glob(folder_path + '/*')
+                fig = plt.figure(i)
+                fig.suptitle(label)
+                plt.imshow(mpimg.imread(images[i]))
+                plt.show()
 
     @staticmethod
     def get_data(x):
@@ -181,14 +181,10 @@ class EuroSAT(object):
         return X
 
     @staticmethod
-    def save_as_npy(dataset,save_folder=os.getcwd(), file_name='data'):
-        path = os.path.join(save_folder,file_name)
+    def save_as_npy(dataset, save_folder=os.getcwd(), file_name='data'):
+        path = os.path.join(save_folder, file_name)
         np.save(path, dataset)
         print('dataset saved in .npy format at this location:', save_folder)
-
-
-
-
 
 
 

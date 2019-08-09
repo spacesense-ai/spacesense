@@ -236,7 +236,16 @@ class read_sentinel(object):
             ndwi = (data[:, :, nir_index] - data[:, :, swir_index]) / (data[:, :, nir_index] + data[:, :, swir_index])
 
         return ndwi
-    
+
+    @staticmethod
+    def get_lai(data):
+        """
+        Leaf Area Index
+        :param data:
+        :return:
+        """
+        return str('Not yet implemented')
+
 
 
 
