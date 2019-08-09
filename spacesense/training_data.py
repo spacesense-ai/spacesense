@@ -85,7 +85,7 @@ class EuroSAT(object):
             self.data_path_rgb = 'data/2750'
             print('EuroSAT RGB data downloaded !')
 
-    def fetch_data(self, datatype='all_bands', labels='all', row_type='1D'):
+    def fetch_data(self, datatype='all_bands', labels='all', row_type='2D'):
         """
 
         :param type:
@@ -95,7 +95,7 @@ class EuroSAT(object):
         if datatype == 'all_bands':
             paths = sorted(glob(self.data_path_all_bands + '/*'))
             if exists(self.data_path_all_bands):
-                X, y = self.__load_dataset__(labels=labels, datatype='all_bands')
+                X, y = self.__load_dataset__(labels=labels, datatype='all_bands',row_type)
 
             else:
                 print('dataset is not available')
@@ -107,7 +107,7 @@ class EuroSAT(object):
         elif datatype == 'rgb':
             paths = sorted(glob(self.data_path_rgb + '/*'))
             if exists(self.data_path_rgb):
-                X, y = self.__load_dataset__(labels=labels, datatype='rgb')
+                X, y = self.__load_dataset__(labels=labels, datatype='rgb',row_type)
 
             else:
                 print('dataset is not available')
@@ -117,7 +117,7 @@ class EuroSAT(object):
                 print('EuroSAT.download_rgb()')
         return X, y
 
-    def __load_dataset__(self, labels='all', datatype='all_bands', row_type='2D'):
+    def __load_dataset__(self, datatype='all_bands',labels='all', row_type='2D'):
 
         if datatype == 'all_bands':
             data_path = self.data_path_all_bands
