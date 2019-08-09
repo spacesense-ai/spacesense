@@ -3,12 +3,12 @@ To assist in building training dataset
 
 """
 import os
+import urllib
 import zipfile
 import glob
 import shapefile
 from shapely.geometry import Polygon
 from os.path import exists
-from urllib.request import urlretrieve
 import numpy as np
 from glob import glob
 import time
@@ -35,6 +35,8 @@ class EuroSAT(object):
     def __init__(self):
         """
         Dataset source and reference: https://github.com/phelber/eurosat
+        Same copyright and license applies as described at the dataset source.
+
         """
         self.data_path_all_bands = 'data/ds/images/remote_sensing/otherDatasets/sentinel_2/tif'
         self.data_path_rgb = 'data/2750'
@@ -119,26 +121,28 @@ class EuroSAT(object):
 
         if type == 'all_bands':
             data_path = self.data_path_all_bands
+            n_bands = 13
         elif type == 'rgb':
             data_path = self.data_path_rgb
+            n_bands = 3
 
         start = time.time()
         if labels == 'all':
-            x = np.zeros((self.info['total sample size'] * 64 * 64, 13))
+            x = np.zeros((self.info['total sample size'] * 64 * 64, n_bands))
             y = np.zeros(self.info['total sample size'] * 64 * 64)
             labels = self.label_names
 
         else:
             sample_size = np.sum([self.info['labels'][name] for name in labels])
-            x = np.zeros((sample_size * 64 * 64, 13))
+            x = np.zeros((sample_size * 64 * 64, n_bands))
             y = np.zeros(sample_size * 64 * 64)
 
         img_paths = {}
         i = 0
         for label in labels:
-            folder_path = os.path.join(self.data_path_all_bands, label)
+            folder_path = os.path.join(data_path, label)
             img_paths[label] = glob(folder_path + '/*')
-            folder_path = os.path.join(self.data_path_all_bands, label)
+            folder_path = os.path.join(data_path, label)
             img_paths[label] = glob(folder_path + '/*')
             for img in img_paths[label]:
                 data = gdal.Open(img).ReadAsArray()
