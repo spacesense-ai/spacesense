@@ -85,17 +85,17 @@ class EuroSAT(object):
             self.data_path_rgb = 'data/2750'
             print('EuroSAT RGB data downloaded !')
 
-    def fetch_data(self, type='all_bands', labels='all'):
+    def fetch_data(self, datatype='all_bands', labels='all', row_type='1D'):
         """
 
         :param type:
         :param labels:
         :return: numpy array
         """
-        if type == 'all_bands':
+        if datatype == 'all_bands':
             paths = sorted(glob(self.data_path_all_bands + '/*'))
             if exists(self.data_path_all_bands):
-                X, y = self.__load_dataset__(labels=labels, type='all_bands')
+                X, y = self.__load_dataset__(labels=labels, datatype='all_bands')
 
             else:
                 print('dataset is not available')
@@ -104,10 +104,10 @@ class EuroSAT(object):
                 print('or')
                 print('EuroSAT.download_rgb()')
 
-        elif type == 'rgb':
+        elif datatype == 'rgb':
             paths = sorted(glob(self.data_path_rgb + '/*'))
             if exists(self.data_path_rgb):
-                X, y = self.__load_dataset__(labels=labels, type='rgb')
+                X, y = self.__load_dataset__(labels=labels, datatype='rgb')
 
             else:
                 print('dataset is not available')
@@ -117,28 +117,38 @@ class EuroSAT(object):
                 print('EuroSAT.download_rgb()')
         return X, y
 
-    def __load_dataset__(self, labels='all', type='all_bands'):
+    def __load_dataset__(self, labels='all', datatype='all_bands', row_type='2D'):
 
-        if type == 'all_bands':
+        if datatype == 'all_bands':
             data_path = self.data_path_all_bands
             n_bands = 13
-        elif type == 'rgb':
+        elif datatype == 'rgb':
             data_path = self.data_path_rgb
             n_bands = 3
 
         start = time.time()
         if labels == 'all':
-            x = np.zeros((self.info['total sample size'] * 64 * 64, n_bands))
-            y = np.zeros(self.info['total sample size'] * 64 * 64)
+            if row_type == '1D':
+                x = np.zeros((self.info['total sample size'] * 64 * 64, n_bands))
+                y = np.zeros(self.info['total sample size'] * 64 * 64)
+            elif row_type == '2D':
+                x = np.zeros((self.info['total sample size'], n_bands, 64, 64))
+                y = np.zeros(self.info['total sample size'])
+
             labels = self.label_names
 
         else:
             sample_size = np.sum([self.info['labels'][name] for name in labels])
-            x = np.zeros((sample_size * 64 * 64, n_bands))
-            y = np.zeros(sample_size * 64 * 64)
+            if row_type == '1D':
+                x = np.zeros((sample_size * 64 * 64, n_bands))
+                y = np.zeros(sample_size * 64 * 64)
+            elif row_type == '2D':
+                x = np.zeros((sample_size, n_bands, 64, 64))
+                y = np.zeros(sample_size)
 
         img_paths = {}
         i = 0
+        j = 0
         for label in labels:
             folder_path = os.path.join(data_path, label)
             img_paths[label] = glob(folder_path + '/*')
@@ -146,11 +156,17 @@ class EuroSAT(object):
             img_paths[label] = glob(folder_path + '/*')
             for img in img_paths[label]:
                 data = gdal.Open(img).ReadAsArray()
-                x_img = self.get_data(data)
-                n = x_img.shape[0]
-                x[i:i + n] = x_img
-                y[i:i + n] = self.label_names.index(label)
-                i += n
+                if row_type == '1D':
+                    x_img = self.get_data(data)
+                    n = x_img.shape[0]
+                    x[i:i + n] = x_img
+                    y[i:i + n] = self.label_names.index(label)
+                    i += n
+                else:
+                    x[j] = data
+                    y[j] = self.label_names.index(label)
+                    j += 1
+
             print(label + ' data loaded')
         print('time taken: %d seconds' % (time.time() - start))
         print('x.shape: ', x.shape, 'y.shape: ', y.shape)
@@ -189,6 +205,5 @@ class EuroSAT(object):
         path = os.path.join(save_folder, file_name)
         np.save(path, dataset)
         print('dataset saved in .npy format at this location:', save_folder)
-
 
 
