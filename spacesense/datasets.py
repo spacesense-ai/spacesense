@@ -238,6 +238,10 @@ class read_sentinel(object):
     def get_lai(data):
         """
         Leaf Area Index
+        source  : Clevers, J.G.P.W.; Kooistra, L.; van den Brande, M.M.M. ,
+        Using Sentinel-2 Data for Retrieving LAI and Leaf and Canopy Chlorophyll Content of a Potato Crop. ,
+        Remote Sens. 2017, 9, 405.
+
         :param data:
         :return:
         """
