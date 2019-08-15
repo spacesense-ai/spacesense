@@ -36,7 +36,11 @@ class EuroSAT(object):
         """
         Dataset source and reference: https://github.com/phelber/eurosat
         Same copyright and license applies as described at the dataset source.
-
+        Band List in order:
+        B01 - Aerosols B02 - Blue B03 - Green B04 - Red
+        B05 - Red edge 1 B06 - Red edge 2 B07 - Red edge 3
+        B08 - NIR B08A - Red edge 4 B09 - Water vapor
+        B10 - Cirrus B11 - SWIR 1 B12 - SWIR 2
         """
         self.data_path_all_bands = 'data/ds/images/remote_sensing/otherDatasets/sentinel_2/tif'
         self.data_path_rgb = 'data/2750'
@@ -196,6 +200,7 @@ class EuroSAT(object):
                 X = x.reshape(x.shape[0] * x.shape[1], x.shape[2])
             elif (x.shape[0] < x.shape[1]) and (x.shape[0] < x.shape[2]):
                 X = x.reshape(x.shape[1] * x.shape[2], x.shape[0])
+                X = X.T
         else:
             X = x
         return X

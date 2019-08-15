@@ -5,10 +5,13 @@ from tensorflow.keras import optimizers
 from osgeo import ogr, gdal
 from rasterio.plot import show, show_hist
 from sklearn.svm import SVC
+import sklearn.svm as svm
 from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
 from sklearn.model_selection import GridSearchCV
 import numpy as np
+import math
+
 
 
 

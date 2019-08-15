@@ -83,9 +83,6 @@ class download_modis(object):
         """
         """
 
-
-
-
 class read_modis(object):
     def __init__(self, hdf_data_path):
         self.hdf_data_path = hdf_data_path
@@ -245,8 +242,4 @@ class read_sentinel(object):
         :return:
         """
         return str('Not yet implemented')
-
-
-
-
 
