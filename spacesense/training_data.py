@@ -199,9 +199,11 @@ class EuroSAT(object):
             if (x.shape[2] < x.shape[0]) and (x.shape[2] < x.shape[1]):
                 X = x.reshape(x.shape[0] * x.shape[1], x.shape[2])
             elif (x.shape[0] < x.shape[1]) and (x.shape[0] < x.shape[2]):
-                X = x.reshape(x.shape[1] * x.shape[2], x.shape[0])
+                X = x.reshape(x.shape[0], x.shape[1]*x.shape[2])
                 X = X.T
         else:
+            if x.shape[0]<x.shape[1]:
+                x = x.T
             X = x
         return X
 
