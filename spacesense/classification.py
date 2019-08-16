@@ -72,6 +72,16 @@ class OneClassSVM(object):
         model = load(model_path)
         return model
 
+    @staticmethod
+    def training_metrics(y_pred):
+        T = len(y_pred[y_pred == 1])
+        F = len(y_pred[y_pred == -1])
+        print('Accuracy, True Positives(%) : ', (T / y_pred.shape[0]) * 100)
+        print('Accuracy, False Negatives(%) : ', (F / y_pred.shape[0]) * 100)
+        print('Length Test set: ', y_pred.shape[0])
+
+
+
 class cnn_custom(object):
     def __init__(self):
         """
@@ -165,8 +175,8 @@ class by_pixel(object):
         self.model = self.model_archi.model
 
         y_pred = self.model.predict(X_test)
-
-        # to add : metrics
+        print('Training metrics:')
+        self.training_metrics(y_pred)
 
     def predict(self, x):
         '''
@@ -202,5 +212,9 @@ class by_pixel(object):
         print('model successfully loaded')
         print('Input shape:', self.model.input_shape[1])
         print(self.model.summary())
+
+    def training_metrics(self,y_pred):
+        return self.model_archi.training_metrics(y_pred)
+
 
 

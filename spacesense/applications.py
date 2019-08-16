@@ -6,7 +6,7 @@ import numpy as np
 
 class landuse(cm.by_pixel):
 
-    def train(self, x, y=None, model_architecture=OneClassSVM(), test_data_size=0.10):
+    def train(self, x, y=None, model_architecture=cm.OneClassSVM(), test_data_size=0.10):
         '''
 
         :return:
@@ -19,7 +19,6 @@ class landuse(cm.by_pixel):
 
         else:
             X = x
-        y = np.random.rand(x.shape[0])
 
         # split dataset into train and test
         X_train, X_test = train_test_split(X, test_size=test_data_size, random_state=1)
@@ -34,6 +33,10 @@ class landuse(cm.by_pixel):
         self.model = self.model_archi.model
 
         y_pred = self.model.predict(X_test)
+        print('Training metrics:')
+        self.training_metrics(y_pred)
+
+
 
 
 
