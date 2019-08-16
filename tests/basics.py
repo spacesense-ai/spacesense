@@ -28,8 +28,12 @@ def test_download_sentinel():
 
     assert len(d.list_products) == 1
 
-    assert d.list_products[0] == ('be8aafbe-1a0b-414d-8bcc-ae6c1f616ce9',
-  {'title': 'S2A_MSIL1C_20160623T105652_N0204_R094_T31UDQ_20160623T105858',
+
+    id, data =  d.list_products[0]
+    assert id == 'be8aafbe-1a0b-414d-8bcc-ae6c1f616ce9'
+
+
+    dict_refecrance = {'title': 'S2A_MSIL1C_20160623T105652_N0204_R094_T31UDQ_20160623T105858',
    'link': "https://scihub.copernicus.eu/dhus/odata/v1/Products('be8aafbe-1a0b-414d-8bcc-ae6c1f616ce9')/$value",
    'link_alternative': "https://scihub.copernicus.eu/dhus/odata/v1/Products('be8aafbe-1a0b-414d-8bcc-ae6c1f616ce9')/",
    'link_icon': "https://scihub.copernicus.eu/dhus/odata/v1/Products('be8aafbe-1a0b-414d-8bcc-ae6c1f616ce9')/Products('Quicklook')/$value",
@@ -60,5 +64,25 @@ def test_download_sentinel():
    'hv_order_tileid': 'UQ31D',
    'filename': 'S2A_MSIL1C_20160623T105652_N0204_R094_T31UDQ_20160623T105858.SAFE',
    'identifier': 'S2A_MSIL1C_20160623T105652_N0204_R094_T31UDQ_20160623T105858',
-   'uuid': 'be8aafbe-1a0b-414d-8bcc-ae6c1f616ce9'})
+   'uuid': 'be8aafbe-1a0b-414d-8bcc-ae6c1f616ce9',
+    'datastripidentifier': 'S2A_OPER_MSI_L1C_DS_SGS__20160623T161958_S20160623T105858_N02.04',
+    'granuleidentifier': 'S2A_OPER_MSI_L1C_TL_SGS__20160623T161958_A005239_T31UDQ_N02.04',
+    'level1cpdiidentifier': 'S2A_OPER_MSI_L1C_TL_SGS__20160623T161958_A005239_T31UDQ_N02.04'
+    }
 
+    assert dict_refecrance == data
+
+    # for k, v in dict_refecrance.items():
+    #     #print(k)
+    #
+    #     if not k in data:
+    #         raise RuntimeError("Error this", k)
+    #
+    #     if data[k] != v:
+    #         raise RuntimeError("Error that", data[k])
+
+
+
+
+if __name__=="__main__":
+    test_download_sentinel()
