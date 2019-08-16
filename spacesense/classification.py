@@ -1,4 +1,4 @@
-from tensorflow.keras.models import Sequential, load_model
+from tensorflow.keras.models import Sequential, load_model,save_model
 from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras import optimizers
@@ -11,7 +11,8 @@ from sklearn import preprocessing
 from sklearn.model_selection import GridSearchCV
 import numpy as np
 from joblib import dump, load
-import math
+from spacesense.utils import *
+
 
 
 
@@ -33,6 +34,7 @@ class SVC_by_pixel(object):
 
     def fit(self, X_train, y_train):
         self.build_model()
+        print('searching for optimal hyperparameters...')
         self.svc_models.fit(X_train, y_train)
         self.model = self.svc_models.best_estimator_
         self.model.fit(X_train, y_train)
@@ -63,6 +65,12 @@ class OneClassSVM(object):
     @staticmethod
     def save_model(clf, model_path):
         dump(clf, model_path)
+        print('model saved')
+
+    @staticmethod
+    def load_model(model_path):
+        model = load(model_path)
+        return model
 
 class cnn_custom(object):
     def __init__(self):
@@ -106,11 +114,21 @@ class cnn_custom(object):
                                         validation_split=validation_split,
                                         verbose=1)
 
+    @staticmethod
+    def save_model(clf, model_path):
+        save_model(clf, model_path)
+        print('model saved')
+
+    @staticmethod
+    def load_model(model_path):
+        model = load_model(model_path)
+        return model
 
 """ Base Class"""
 class by_pixel(object):
     def __init__(self):
-        """ Reconstructed Solar Induced Fluorescence
+        """
+        Base class for pixel-by-pixel classification
 
         Parameters
         ----------
@@ -176,8 +194,11 @@ class by_pixel(object):
         '''
         return ('Not Yet Implemented')
 
-    def upload_model(self, model_path):
-        self.model = load_model(model_path)
+    def save_model(self, model_name):
+        self.model_archi.save_model(self.model, 'trained_models' + '/' + model_name)
+
+    def load_model(self, model_path):
+        self.model = self.model_archi.load_model(model_path)
         print('model successfully loaded')
         print('Input shape:', self.model.input_shape[1])
         print(self.model.summary())
