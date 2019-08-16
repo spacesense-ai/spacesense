@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
 from sklearn.model_selection import GridSearchCV
 import numpy as np
+from joblib import dump, load
 import math
 
 
@@ -37,7 +38,7 @@ class SVC_by_pixel(object):
         self.model.fit(X_train, y_train)
 
 
-class land_use(object):
+class OneClassSVM(object):
     def __init__(self):
         """
         Simple Support Vector Machine for regression
@@ -45,20 +46,23 @@ class land_use(object):
         self.model = None
         self.svc_models = None
 
-    def build_model(self):
-        """
-        TBD
+    def build_model(self, X_train, n=10):
+        nu = np.linspace(start=1e-5, stop=1e-2, num=n)
+        gamma = np.linspace(start=1e-6, stop=1e-3, num=n)
+        opt_diff = 1.0
+        opt_nu = None
+        opt_gamma = None
+        nu_opt, gamma_opt = optimize_OneClassSVM(X_train, n)
+        self.svc_models = svm.OneClassSVM(nu=nu_opt, kernel='rbf', gamma=gamma_opt)
 
-        :return: ML model to classify forest_cover
-        """
+    def fit(self, X_train):
+        self.build_model(X_train)
+        self.model = self.svc_models
+        self.model.fit(X_train)
 
-    def fit(self, X_train, y_train):
-        self.build_model()
-        self.svc_models.fit(X_train, y_train)
-        self.model = self.svc_models.best_estimator_
-        self.model.fit(X_train, y_train)
-
-
+    @staticmethod
+    def save_model(clf, model_path):
+        dump(clf, model_path)
 
 class cnn_custom(object):
     def __init__(self):
@@ -170,6 +174,7 @@ class by_pixel(object):
 
         :return:
         '''
+        return ('Not Yet Implemented')
 
     def upload_model(self, model_path):
         self.model = load_model(model_path)

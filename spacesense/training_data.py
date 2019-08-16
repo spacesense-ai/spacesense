@@ -23,7 +23,7 @@ class manage():
 
     def display_shp_polygon(self,file):
         if file.split('.')[-1] == 'shp':
-            sf = shapefile.Reader(folder+'/'+file)
+            sf = shapefile.Reader(self.folder+'/'+file)
             polygon = Polygon(sf.shape().points)
             x,y = polygon.exterior.xy
             plt.plot(x,y)
