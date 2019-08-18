@@ -34,7 +34,7 @@ class landuse(cm.by_pixel):
 
         y_pred = self.model.predict(X_test)
         print('Training metrics:')
-        self.training_metrics(y_pred)
+        self.training_metrics(y_test=None,y_pred=y_pred)
 
 
 
