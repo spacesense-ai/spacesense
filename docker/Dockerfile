@@ -27,8 +27,10 @@ RUN pip3 install  numpy \
 		jupyter \
 		matplotlib \
 		sentinelsat \
-		sentinelhub 
-
+		sentinelhub \
+		pyshp \
+		sklearn keras tensorflow geopandas
+  
 # Change the LANG to UTF8
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8

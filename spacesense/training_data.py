@@ -121,7 +121,7 @@ class EuroSAT(object):
                 print('EuroSAT.download_rgb()')
         return X, y
 
-    def __load_dataset__(self, datatype,labels, row_type):
+    def __load_dataset__(self, datatype, labels, row_type):
 
         if datatype == 'all_bands':
             data_path = self.data_path_all_bands
