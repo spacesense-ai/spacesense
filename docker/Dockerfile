@@ -38,4 +38,4 @@ ENV LC_ALL=C.UTF-8
 # Settings for Jupyter-notebooks
 # EXPOSE 8888
 # ENTRYPOINT ["jupyter-notebook", "--allow-root", "--port=8888", "--no-browser", "--ip=0.0.0.0"] 
-
+RUN echo 'alias notebook="jupyter-notebook --allow-root --port=8888 --no-browser --ip=0.0.0.0"' >> ~/.bashrc
