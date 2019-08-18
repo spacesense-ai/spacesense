@@ -7,7 +7,7 @@ from rasterio.plot import show, show_hist
 from sklearn.svm import SVC
 import sklearn.svm as svm
 from sklearn.model_selection import train_test_split
-from sklearn import preprocessing
+from sklearn import preprocessing, metrics
 from sklearn.model_selection import GridSearchCV
 import numpy as np
 from joblib import dump, load
@@ -39,6 +39,13 @@ class SVC_by_pixel(object):
         self.model = self.svc_models.best_estimator_
         self.model.fit(X_train, y_train)
 
+    @staticmethod
+    def training_metrics(y_test, y_pred):
+        print('Accuracy:',metrics.accuracy_score(y_test, y_pred)
+        print(metrics.confusion_matrix(y_test,y_pred))
+
+
+
 
 class OneClassSVM(object):
     def __init__(self):
@@ -68,18 +75,12 @@ class OneClassSVM(object):
         print('model saved')
 
     @staticmethod
-    def load_model(model_path):
-        model = load(model_path)
-        return model
-
-    @staticmethod
-    def training_metrics(y_pred):
+    def training_metrics(y_test,y_pred):
         T = len(y_pred[y_pred == 1])
         F = len(y_pred[y_pred == -1])
         print('Accuracy, True Positives(%) : ', (T / y_pred.shape[0]) * 100)
         print('Accuracy, False Negatives(%) : ', (F / y_pred.shape[0]) * 100)
         print('Length Test set: ', y_pred.shape[0])
-
 
 
 class cnn_custom(object):
@@ -130,9 +131,10 @@ class cnn_custom(object):
         print('model saved')
 
     @staticmethod
-    def load_model(model_path):
-        model = load_model(model_path)
-        return model
+    def training_metrics(y_test, y_pred):
+        print('Accuracy:', metrics.accuracy_score(y_test, y_pred)
+        print(metrics.confusion_matrix(y_test, y_pred))
+
 
 """ Base Class"""
 class by_pixel(object):
@@ -176,7 +178,7 @@ class by_pixel(object):
 
         y_pred = self.model.predict(X_test)
         print('Training metrics:')
-        self.training_metrics(y_pred)
+        self.training_metrics(y_test,y_pred)
 
     def predict(self, x):
         '''
@@ -202,19 +204,25 @@ class by_pixel(object):
 
         :return:
         '''
-        return ('Not Yet Implemented')
+        return NotImplementedError
 
     def save_model(self, model_name):
         self.model_archi.save_model(self.model, 'trained_models' + '/' + model_name)
 
     def load_model(self, model_path):
-        self.model = self.model_archi.load_model(model_path)
-        print('model successfully loaded')
-        print('Input shape:', self.model.input_shape[1])
-        print(self.model.summary())
+        modeltype = model_path.split('/')[-1].split('.')[-1]
+        if modeltype=='joblib':
+            self.model = load(model_path)
+            print('model successfully loaded')
 
-    def training_metrics(self,y_pred):
-        return self.model_archi.training_metrics(y_pred)
+        elif modeltype=='h5':
+            self.model = load_model(model_path)
+            print('model successfully loaded')
+            print(self.model.summary())
+        else:
+            return NotImplementedError
+    def training_metrics(self,y_test=None,y_pred):
+        return self.model_archi.training_metrics(y_test,y_pred)
 
 
 
