@@ -41,7 +41,7 @@ class SVC_by_pixel(object):
 
     @staticmethod
     def training_metrics(y_test, y_pred):
-        print('Accuracy:',metrics.accuracy_score(y_test, y_pred)
+        print('Accuracy:',metrics.accuracy_score(y_test, y_pred))
         print(metrics.confusion_matrix(y_test,y_pred))
 
 
@@ -132,7 +132,7 @@ class cnn_custom(object):
 
     @staticmethod
     def training_metrics(y_test, y_pred):
-        print('Accuracy:', metrics.accuracy_score(y_test, y_pred)
+        print('Accuracy:', metrics.accuracy_score(y_test, y_pred))
         print(metrics.confusion_matrix(y_test, y_pred))
 
 
@@ -221,7 +221,8 @@ class by_pixel(object):
             print(self.model.summary())
         else:
             return NotImplementedError
-    def training_metrics(self,y_test=None,y_pred):
+
+    def training_metrics(self,y_test,y_pred):
         return self.model_archi.training_metrics(y_test,y_pred)
 
 
