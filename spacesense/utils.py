@@ -48,9 +48,68 @@ def get_LAI(data, nir_index=7, red_index=3, datatype='sentinel-2'):
     else:
         print('Check Input')
     wdvi = B08 - Cwdvi * B04
-    LAI = 10.22 * wdvi + 0.4768
-    return LAI
+    lai = 10.22 * wdvi + 0.4768
+    return lai
 
+def get_NDWI(data, nir_index=7, green_index=2,swir_index=11, option=1):
+    """
+    Normalized difference water index
+
+    option 1:
+    NDWI = (b_green - b_nir)/(b_nir + b_green)
+
+    option 2:
+    NDWI = (b_nir - b11_swir)/(b_nir + b11_swir)
+    :return: NDWI values for each pixel
+    """
+    if len(data.shape) == 3:
+        B08 = data[:, :, nir_index]
+        B03 = data[:, :, green_index]
+        B11 = data[:, :, swir_index]
+    elif len(data.shape)==2:
+        B08 = data[:, nir_index]
+        B03 = data[:, green_index]
+        B11 = data[:, swir_index]
+    elif len(data.shape)==1:
+        B08 = data[nir_index]
+        B03 = data[green_index]
+        B11 = data[swir_index]
+    else:
+        print('Check input')
+    if option==1:
+        ndwi = (B03 - B08) / (B08 + B03)
+
+    elif option==2:
+        """
+        needs resampling band 11 SWIR to 10x10 or band 8 NIR to 20x20
+        """
+        ndwi = (B08 - B11) / (B08 + B11)
+
+    return ndwi
+
+
+def get_EVI(data, nir_index=7, red_index=3,blue_index=1 ,datatype='sentinel-2'):
+    """
+    Enhanced Vegetation Index
+        source  : https://www.indexdatabase.de/db/si-single.php?sensor_id=96&rsindex_id=16
+    :return: EVI
+    """
+    if len(data.shape) == 3:
+        B08 = data[:,:,nir_index]
+        B04 = data[:,:,red_index]
+        B02 = data[:, :,blue_index]
+    elif len(data.shape)==2:
+        B08 = data[:,nir_index]
+        B04 = data[:,red_index]
+        B02 = data[:,blue_index]
+    elif len(data.shape)==1:
+        B08 = data[nir_index]
+        B04 = data[red_index]
+        B02 = data[blue_index]
+    else:
+        print('Check Input')
+    evi = 2.5 * (B08 - B04) / ((B08 + 6.0 * B04 - 7.5 * B02) + 1.0)
+    return evi
 
 def optimize_OneClassSVM(X, n):
     print('searching for optimal hyperparameters...')
