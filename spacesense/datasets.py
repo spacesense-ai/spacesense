@@ -168,21 +168,19 @@ class read_sentinel(object):
         np.save(save_folder + '/data', self.data)
         print('dataset saved in .npy format at this location:', save_folder)
 
-    def sentinel_2_remap(self):
+    def sentinel_2_remap(self,interpolation='cubic_spline'):
         # load and save all bands as numpy arrays for resuse and remap bands [3,4,5,7,8,9]
         start_time = time.time()
         row_, col_ = self.img_shp
+        if interpolation=='cubic_spline':
+            interpolation_alg = cv2.INTER_CUBIC
         for b in range(10):
             if b in [4, 5, 6, 10, 11, 12]:
                 ar_n = np.zeros((row_, col_))
                 im = gdal.Open(self.band_files[b])
                 ar = im.ReadAsArray()
                 name = self.band_details[b] + '.npy'
-                for i in range(int(row_ / 2)):
-                    for j in range(int(col_ / 2)):
-                        n = int(i * 2)
-                        m = int(j * 2)
-                        ar_n[n:n + 2, m:m + 2] = ar[i, j]
+                ar_n = cv2.resize(ar, dsize=(row_, col_), interpolation=interpolation_alg)
                 np.save(self.folder_path + '/' + name, ar_n)
                 print(self.band_details[b], ar_n.shape)
 
