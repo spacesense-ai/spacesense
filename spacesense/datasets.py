@@ -8,6 +8,7 @@ from sentinelsat import SentinelAPI, read_geojson, geojson_to_wkt
 import matplotlib.pyplot as plt
 from datetime import date
 from osgeo import gdal
+import cv2
 import numpy as np
 from glob import glob
 import time
