@@ -40,10 +40,14 @@ class SVC_by_pixel(object):
         self.model.fit(X_train, y_train)
 
     @staticmethod
+    def save_model(clf, model_path):
+        dump(clf, model_path + '.joblib')
+        print('model saved')
+
+    @staticmethod
     def training_metrics(y_test, y_pred):
         print('Accuracy:',metrics.accuracy_score(y_test, y_pred))
         print(metrics.confusion_matrix(y_test,y_pred))
-
 
 
 
@@ -71,7 +75,7 @@ class OneClassSVM(object):
 
     @staticmethod
     def save_model(clf, model_path):
-        dump(clf, model_path)
+        dump(clf, model_path+'.joblib')
         print('model saved')
 
     @staticmethod
