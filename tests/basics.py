@@ -14,9 +14,10 @@ def test_download_sentinel():
     We espect one observation
 
     """
+    import os
+    username = os.environ["COPERNICUS_LOGIN"]
+    psswrd = os.environ["COPERNICUS_PWD"]
 
-    username = "antoinetavant"
-    psswrd = "sdr2sebzaf845dg"
 
     d = download_sentinel(username, psswrd)
 
