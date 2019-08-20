@@ -170,6 +170,11 @@ class read_sentinel(object):
         print('dataset saved in .npy format at this location:', save_folder)
 
     def sentinel_2_remap(self,interpolation='cubic_spline'):
+        """
+        Upscaling only
+        :param interpolation:
+        :return:
+        """
         # load and save all bands as numpy arrays for resuse and remap bands [3,4,5,7,8,9]
         start_time = time.time()
         row_, col_ = self.img_shp
