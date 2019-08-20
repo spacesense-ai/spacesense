@@ -14,7 +14,10 @@ RUN apt-get update && \
 	git \
 	wget \
 	vim \
-	python3-pip 
+	python3-pip \
+	libsm6 \
+	libxext6 \
+	libxrender-dev
 
 # Set default python to python3
 # RUN rm /usr/bin/python /usr/bin/pip & ln -s /usr/bin/python3 /usr/bin/python & \
@@ -29,7 +32,12 @@ RUN pip3 install  numpy \
 		sentinelsat \
 		sentinelhub \
 		pyshp \
-		sklearn keras tensorflow geopandas
+		pytest \
+		sklearn \
+		keras \
+		tensorflow \
+		geopandas \
+		opencv-python
   
 # Change the LANG to UTF8
 ENV LANG=C.UTF-8
