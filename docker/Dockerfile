@@ -41,7 +41,7 @@ RUN pip3 install  numpy \
 		pyModis
 
 RUN pip3 install python-cmr \
-                 wget
+                 wget coverage
 
   
 # Change the LANG to UTF8

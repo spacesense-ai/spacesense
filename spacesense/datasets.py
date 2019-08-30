@@ -108,7 +108,7 @@ class download_sentinel(object):
     """ add function to display product AOI Polygon"""
 
 
-class download_modis(object):
+class download_modis(Dataset_general):
     """
     The MODIS instrument is operating on both the Terra and Aqua spacecraft.
     It has a viewing swath width of 2,330 km and views the entire surface of the Earth every one to two days.

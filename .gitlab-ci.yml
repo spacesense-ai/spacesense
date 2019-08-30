@@ -19,3 +19,8 @@ test:pytest:
         - pytest tests/*
 
 
+test:pytest-cov:
+    image: spacesence/spacesence:latest
+    script:
+        - pip3 install pytest pytest-cov --quiet
+        - pytest --cov=spacesense tests/
