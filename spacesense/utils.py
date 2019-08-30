@@ -24,7 +24,7 @@ def get_NDVI(data, nir_index=7, red_index=3, datatype='sentinel-2'):
     elif len(data.shape)==1:
         ndvi = (data[nir_index] - data[red_index]) / (data[nir_index] + data[red_index])
     else:
-        print('Check Input')
+        raise RuntimeError('Check Input')
     return ndvi
 
 def get_LAI(data, nir_index=7, red_index=3, datatype='sentinel-2'):
