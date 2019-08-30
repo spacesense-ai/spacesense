@@ -37,7 +37,12 @@ RUN pip3 install  numpy \
 		keras \
 		tensorflow \
 		geopandas \
-		opencv-python
+		opencv-python\
+		pyModis
+
+RUN pip3 install python-cmr \
+                 wget
+
   
 # Change the LANG to UTF8
 ENV LANG=C.UTF-8

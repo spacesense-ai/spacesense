@@ -3,15 +3,50 @@ DATASETS: download and perform basic operations
 
 """
 import os
-import sentinelsat as ss
-from sentinelsat import SentinelAPI, read_geojson, geojson_to_wkt
-import matplotlib.pyplot as plt
-from datetime import date
-from osgeo import gdal
+import time
+from glob import glob
+
 import cv2
 import numpy as np
-from glob import glob
-import time
+from osgeo import gdal
+from sentinelsat import SentinelAPI, read_geojson, geojson_to_wkt
+
+
+class Dataset_general():
+    """General class to define the needed functions to define in a Dataset class
+
+    The Dataset Class are used to fetch and download images"""
+
+    def __init__(self):
+        """init the Dataset class. May be use to set credentials for the API"""
+
+        self.roi_polygon = None
+        self.startdate = None
+        self.enddate = None
+        self.list_products = None
+
+
+    def fetch_datasets(self, download_type='ROI_polygon', roi_polygon=None, startdate=None, enddate=None, cloudcover_max=5):
+        """Make a request to the API to obtain the availables images
+
+        :param download_type: str to specify the product fetched. Can be "ROI_polygon" or "full"
+        :param roi_polygon: str : the filename to the ROI_polygon. Needs to by a geojson format
+        :param startdate: datetime.date object for the start of the lookup
+        :param enddate: datetime.date object for the endof the lookup
+        :param cloudcover_max: The maximum cloud coverage allowed
+
+        Sets self.list_products to the list of the product ID  for the API to download
+        """
+
+        raise RuntimeError("method not implemented")
+
+    def download(self, list_product_ids,directory_path='.'):
+        """
+
+        :param list_product_ids: list of the product_ID to download
+        :param directory_path: str path location
+        """
+        raise RuntimeError("method not implemented")
 
 
 class download_sentinel(object):
@@ -75,14 +110,274 @@ class download_sentinel(object):
 
 class download_modis(object):
     """
+    The MODIS instrument is operating on both the Terra and Aqua spacecraft.
+    It has a viewing swath width of 2,330 km and views the entire surface of the Earth every one to two days.
+    Its detectors measure 36 spectral bands between 0.405 and 14.385 µm, and it acquires data at three spatial resolutions -- 250m, 500m, and 1,000m.
 
-    TBD
     :return:
     """
 
-    def __init__(self):
+    def __init__(self, username, password):
+        super(download_modis, self).__init__()
+
+        self.username = username
+        self.password = password
+        self.product_shortname = None
+
+    def fetch_datasets(self, download_type='ROI_polygon',
+                       roi_polygon=None,
+                       startdate=None,
+                       enddate=None,
+                       cloudcover_max=5,
+                       product_shortname="MOD15A2H",
+                       max_products=-1,
+                       inverse_polygon_order=False):
+
+        """Qary the NASA API for products
+
+        See: https://modis.ornl.gov/data/modis_webservice.html
+
         """
+        from cmr import GranuleQuery
+
+        self.product_shortname = product_shortname
+        self.roi_polygon = roi_polygon
+
+        if download_type == 'ROI_polygon':
+            if roi_polygon.split('.')[-1] == 'geojson':
+                list_coords = from_geojson_to_list_coords(self.roi_polygon)
+                #print(list_coords)
+
+        else:
+            raise RuntimeError("Unknown download type")
+
+        if inverse_polygon_order:
+            list_coords = list_coords[::-1]
+
+        api = GranuleQuery().polygon(list_coords).short_name(self.product_shortname).temporal(startdate, enddate)
+
+        n_produtes = api.hits()
+        print(f"{n_produtes} products found for these parameters")
+
+        if max_products == -1:
+            max_products = n_produtes
+
+        self.list_products = api.get(limit=max_products)
+        self.list_products_id = [ f["producer_granule_id"] for f in self.list_products]
+
+    def download_files(self, list_product_ids,
+                       directory_path='.',
+                       verbose=True):
+        """download the products"""
+
+        import requests
+        import sys
+        import logging
+        import wget
+
+        LOG = logging.getLogger(__name__)
+        OUT_HDLR = logging.StreamHandler(sys.stdout)
+        OUT_HDLR.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
+        OUT_HDLR.setLevel(logging.INFO)
+        LOG.addHandler(OUT_HDLR)
+        LOG.setLevel(logging.INFO)
+
+
+        CHUNKS = 65536
+
+        with requests.Session() as s:
+            s.auth = (self.username, self.password)
+
+            for product_id in list_product_ids:
+
+                if verbose:
+                    print("Downloading prodcut:", product_id)
+                index_product = self.list_products_id.index(product_id)
+
+                product_name = ".".join(product_id.split(".")[1:-1])
+
+                """Create the folder for the product"""
+                os.mkdir(os.path.join(directory_path, product_name), )
+
+                product_links = self.list_products[index_product]["links"]
+
+                url_jpgs = []
+                url_file = None
+                for p_link in product_links:
+                    if "type" in p_link:
+                        if p_link["type"] == 'application/x-hdfeos':
+                            url_file = p_link["href"]
+                        elif p_link["type"] == "image/jpeg":
+                            if verbose:
+                                print("The link object is", p_link)
+                            url_jpgs.append(p_link["href"])
+
+
+                file_name = os.path.join(directory_path, product_name, product_id, )
+
+                r1 = s.request('get', url_file)
+                r = s.get(r1.url, stream=True)
+                if not r.ok:
+                    raise IOError("Can't start download... [%s]" % url_file)
+
+                file_size = int(r.headers['content-length'])
+
+                LOG.info("Starting download on %s(%d bytes) ..." %
+                         (file_name, file_size))
+
+                with open(file_name, 'wb') as fp:
+                    for chunk in r.iter_content(chunk_size=CHUNKS):
+                        if chunk:
+                            fp.write(chunk)
+                    fp.flush()
+                    os.fsync(fp)
+                    if verbose:
+                        LOG.info("\tDone!")
+
+                for url_jpg in url_jpgs:
+                    print(product_id, url_jpg)
+                    wget.download(url_jpg, out= os.path.join(directory_path, product_name))
+
+
+class download_SMAP(object):
+    """
+    The MODIS instrument is operating on both the Terra and Aqua spacecraft.
+    It has a viewing swath width of 2,330 km and views the entire surface of the Earth every one to two days.
+    Its detectors measure 36 spectral bands between 0.405 and 14.385 µm, and it acquires data at three spatial resolutions -- 250m, 500m, and 1,000m.
+
+    :return:
+    """
+
+    def __init__(self, username, password):
+        super(download_SMAP, self).__init__()
+
+        self.username = username
+        self.password = password
+        self.product_shortname = None
+
+    def fetch_datasets(self, download_type='ROI_polygon',
+                       roi_polygon=None,
+                       startdate=None,
+                       enddate=None,
+                       cloudcover_max=5,
+                       product_shortname="SPL3SMP",
+                       max_products=-1,
+                       inverse_polygon_order=False):
+
+        """Qary the NASA API for products
+
+        See: https://modis.ornl.gov/data/modis_webservice.html
+
         """
+        from cmr import GranuleQuery
+
+        self.product_shortname = product_shortname
+        self.roi_polygon = roi_polygon
+
+        if download_type == 'ROI_polygon':
+            if roi_polygon.split('.')[-1] == 'geojson':
+                list_coords = from_geojson_to_list_coords(self.roi_polygon)
+                #print(list_coords)
+
+        else:
+            raise RuntimeError("Unknown download type")
+
+        if inverse_polygon_order:
+            list_coords = list_coords[::-1]
+
+        api = GranuleQuery().polygon(list_coords).short_name(self.product_shortname).temporal(startdate, enddate)
+
+        n_produtes = api.hits()
+        print(f"{n_produtes} products found for these parameters")
+
+        if max_products == -1:
+            max_products = n_produtes
+
+        self.list_products = api.get(limit=max_products)
+        self.list_products_id = [ f["producer_granule_id"] for f in self.list_products]
+
+    def download_files(self, list_product_ids,
+                       directory_path='.',
+                       verbose=True):
+        """download the products"""
+
+        import requests
+        import sys
+        import logging
+        import wget
+
+        LOG = logging.getLogger(__name__)
+        OUT_HDLR = logging.StreamHandler(sys.stdout)
+        OUT_HDLR.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
+        OUT_HDLR.setLevel(logging.INFO)
+        LOG.addHandler(OUT_HDLR)
+        LOG.setLevel(logging.INFO)
+
+
+        CHUNKS = 65536
+
+        with requests.Session() as s:
+            s.auth = (self.username, self.password)
+
+            for product_id in list_product_ids:
+
+                if verbose:
+                    print("Downloading prodcut:", product_id)
+                index_product = self.list_products_id.index(product_id)
+
+                product_name = product_id.split(".")[0]
+                print(product_name)
+
+                """Create the folder for the product"""
+                try:
+                    os.mkdir(os.path.join(directory_path, product_name), )
+                except FileExistsError:
+                    pass  # May need to check if the file is already downloaded
+
+                product_links = self.list_products[index_product]["links"]
+
+                url_jpgs = []
+                url_file = None
+                for p_link in product_links:
+                    if "type" in p_link:
+                        if p_link["type"] == 'application/x-hdfeos' and p_link["rel"] == 'http://esipfed.org/ns/fedsearch/1.1/data#' :
+
+                            url_file = p_link["href"]
+                        elif p_link["type"] == "image/jpeg":
+                            if verbose:
+                                print("The link object is", p_link)
+                            url_jpgs.append(p_link["href"])
+
+                assert url_file is not None, "URL file to download not found in Links attributes"
+
+                file_name = os.path.join(directory_path, product_name, product_id, )
+                print(url_file)
+                r1 = s.request('get', url_file)
+                r = s.get(r1.url, stream=True)
+                if not r.ok:
+                    raise IOError("Can't start download... [%s]" % url_file)
+
+                try:
+                    file_size = int(r.headers['content-length'])
+                except KeyError:
+                    file_size = 0
+
+                LOG.info("Starting download on %s(%d bytes) ..." %
+                         (file_name, file_size))
+
+                with open(file_name, 'wb') as fp:
+                    for chunk in r.iter_content(chunk_size=CHUNKS):
+                        if chunk:
+                            fp.write(chunk)
+                    fp.flush()
+                    os.fsync(fp)
+                    if verbose:
+                        LOG.info("\tDone!")
+
+                for url_jpg in url_jpgs:
+                    print(product_id, url_jpg)
+                    wget.download(url_jpg, out= os.path.join(directory_path, product_name))
+
 
 class read_modis(object):
     def __init__(self, hdf_data_path):
@@ -250,4 +545,29 @@ class read_sentinel(object):
         :return:
         """
         return str('Not yet implemented')
+
+
+
+def from_geojson_to_list_coords(filename):
+    """Part the geojson file and return the list of points"""
+    geo_json_roi = read_geojson(filename)
+
+
+    if geo_json_roi["type"] == 'FeatureCollection':
+        geo_json_features = geo_json_roi["features"]
+        n_features = len(geo_json_features)
+
+        assert n_features == 1, "The number of features must be 1"
+
+        geo_json_feature = geo_json_features[0]["geometry"]
+
+        assert geo_json_feature["type"] == "Polygon" , "Other types than polynomes is not yet possible"
+
+        list_coordinates = geo_json_feature["coordinates"][0]
+
+    else:
+        raise RuntimeError("Unknown Geojson type")
+
+
+    return list_coordinates
 
