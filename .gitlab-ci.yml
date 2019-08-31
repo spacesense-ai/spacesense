@@ -1,5 +1,10 @@
+stages:
+  - test-pytest-cov
+  - test-pylint
 
-test:pylint:
+
+test-pylint:
+    stage: test-pylint
     image: spacesence/spacesence:latest
     script:
         - pip3 install pylint pylint-exit anybadge --quiet
@@ -12,14 +17,9 @@ test:pylint:
             - pylint.svg
 
 
-test:pytest:
-    image: spacesence/spacesence:latest
-    script:
-        - pip3 install pytest --quiet
-        - pytest tests/*
 
-
-test:pytest-cov:
+test-pytest-cov:
+    stage: test-pytest-cov
     image: spacesence/spacesence:latest
     script:
         - pip3 install pytest pytest-cov --quiet
