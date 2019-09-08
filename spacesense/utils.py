@@ -9,7 +9,7 @@ Spectral indices: NDVI,...
 import math
 import numpy as np
 from sklearn import svm
-
+import os
 
 def get_NDVI(data, nir_index=7, red_index=3, datatype='sentinel-2'):
     """
@@ -130,3 +130,9 @@ def optimize_OneClassSVM(X, n):
                 opt_nu = nu[i]
                 opt_gamma = gamma[j]
     return opt_nu, opt_gamma
+
+
+
+def mkdir(directory):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
