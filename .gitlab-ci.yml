@@ -8,6 +8,7 @@ test-pylint:
     image: spacesence/spacesence:latest
     script:
         - pip3 install pylint pylint-exit anybadge --quiet
+        - pip3 install .
         - pylint --ignored-classes=_socketobject --output-format=text spacesense/ > pylint.txt || pylint-exit $?
         - score=$(sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p' pylint.txt)
         - echo "Pylint score was $score"
@@ -23,4 +24,5 @@ test-pytest-cov:
     image: spacesence/spacesence:latest
     script:
         - pip3 install pytest pytest-cov --quiet
+        - pip3 install .
         - pytest --cov=spacesense tests/
