@@ -41,7 +41,10 @@ RUN pip3 install  numpy \
 		pyModis
 
 RUN pip3 install python-cmr \
-                 wget coverage appdirs
+                 wget \
+                 coverage \
+                 appdirs \
+                 rasterio
 
   
 # Change the LANG to UTF8
