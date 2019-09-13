@@ -1,4 +1,3 @@
-from spacesense import config
 import os
 import sys
 
@@ -8,6 +7,7 @@ sys.path.insert(
         os.path.join(
             os.path.dirname(__file__),
             '..')))
+from spacesense import config
 import pytest
 
 
@@ -17,14 +17,14 @@ def test_ConfigEntry():
     """
 
     temp_entry = config.ConfigEntry("group_value", "key", "default_value")
+    temp_entry.set("a")
+    assert temp_entry.get() == "a"
 
-    got_value = temp_entry.get()
-    assert got_value == "default_value"
+    temp_entry_withset = config.ConfigEntry("group_value", "key", "default_value")
 
-    temp_entry.set("value_set")
-    got_value = temp_entry.get()
+    temp_entry_withset.set("value_set")
 
-    assert got_value == "value_set"
+    assert temp_entry.get() == "value_set"
 
 
 def test_fname():

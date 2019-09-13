@@ -1,7 +1,7 @@
 import configparser
 import os
 from appdirs import user_config_dir
-from spacesense.utils import mkdir
+from ..utils import mkdir
 
 
 """Test first if there is a .config.ini file here, else take the default"""
