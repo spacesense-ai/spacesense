@@ -27,10 +27,10 @@ def test_download_smap():
 
     # print(d.list_products)
 
-    assert len(d.list_products) == 170
+    assert len(d.list_products) == 340
 
 
-    id =  d.list_products_id[1]
+    id =  d.list_products_id[2]
     assert id == 'SMAP_L3_SM_P_20190102_R16022_001.h5'
 
     data = d.list_products[0]
