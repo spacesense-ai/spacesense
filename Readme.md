@@ -14,4 +14,4 @@ The package `spacesense.ai` give the tools to query, download, process images fr
 
 The package is currently  being developed. 
 Nothing much works for now.
-Keep in touch to the first version soon to come.
+[Keep in touch](https://www.spacesense.ai/) to the first version soon to come.
