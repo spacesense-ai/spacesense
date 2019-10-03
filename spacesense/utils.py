@@ -131,8 +131,6 @@ def optimize_OneClassSVM(X, n):
                 opt_gamma = gamma[j]
     return opt_nu, opt_gamma
 
-
-
 def mkdir(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
