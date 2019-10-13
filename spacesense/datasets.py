@@ -5,12 +5,11 @@ DATASETS: download and perform basic operations
 import os
 import time
 from glob import glob
-
-import cv2
 import numpy as np
 from osgeo import gdal
 from sentinelsat import SentinelAPI, read_geojson, geojson_to_wkt
-
+from rasterio.enums import Resampling
+import rasterio
 
 class Dataset_general():
     """General class to define the needed functions to define in a Dataset class
@@ -407,64 +406,70 @@ class read_modis(object):
         """
 
 
-class read_sentinel(object):
+class read_sentinel_2(object):
 
-    def __init__(self, folder_path, img_type='sentinel_2'):
-        self.img_type = img_type
+    def __init__(self, folder_path):
         self.folder_path = folder_path
-        self.band_files = np.array(sorted(glob(self.folder_path + '/*B*.jp2')))
+        self.band_files = np.array(sorted(glob(self.folder_path + '/GRANULE' + '/*/IM*/*B*.jp2')))
         self.band_details = [file.split('_')[-1].split('.')[0] for file in self.band_files]
         im = gdal.Open(self.band_files[1])
-        arf_base = im.ReadAsArray()
-        self.img_shp = arf_base.shape
+        # arf_base = im.ReadAsArray()
+        # self.img_shp = arf_base.shape
         self.meta_data = im.GetMetadata()
         self.num_bands = len(self.band_files)
+        self.save_folder = self.folder_path
         self.AOI = None
         self.data = None
 
-    def get_data(self, bandfiles=0, row_start=0, col_start=0, row_len=1000, col_len=1000,save_as_npy=False):
+    def get_data(self, AOI='westarea.shp', resample=False, resize_raster_source='B02',
+                 interpolation=Resampling.cubic_spline, p=[2000, 2000, 0, 2000, 0, 2000], save_as_npy=False):
         """
-        1. loads from npy files for efficiency
-        2. order of bands: [01,02,03,04,05,06,07,08,09,10,11,12,8A]
-
+        NOTES
+        1. order of bands: [01,02,03,04,05,06,07,08,09,10,11,12,8A]
+        2. returns: (a dictionary of 13 bands),(single array of dimension (x_img,y_img,13) in the 'order of bands')
+        3. loads from npy files for efficiency if available
         """
 
-        self.row_len = row_len
-        self.col_len = col_len
-        self.row_start = row_start
-        self.col_start = col_start
-
-        if bandfiles == 0:
-            bandfiles = self.band_files
-
-        input_bands = bandfiles
-        num_bands = len(input_bands)
-        data = np.zeros((self.row_len, self.col_len, num_bands))
-
-        if save_as_npy:
-            # needs some more debugging here
-            npy_files = sorted(glob(self.folder_path + '/*.npy'))
-            if len(npy_files) == 0:
-                if self.img_type == 'sentinel-2':
-                    self.sentinel_2_remap()
-            # one band info for all pixels loaded in each iteration
-            for i in range(num_bands):
-                arf = np.load(npy_files[i])
-                ap1 = arf[row_start:row_start + row_len, col_start:col_start + col_len]
-                data[:, :, i] = ap1
+        if AOI == 'all':
+            self.band_files_new = self.band_files
         else:
-            for i in range(num_bands):
-                arf = gdal.Open(bandfiles[i])
-                ap1 = arf.ReadAsArray()
-                ap1 = ap1[row_start:row_start + row_len, col_start:col_start + col_len]
-                data[:, :, i] = ap1
-        self.data = data
+            # check for existing clipped raster files in tiff for given aoi
+            aoi_name = AOI.split('/')[-1].split('.')[0]
+            self.band_files_new = np.array(sorted(glob(self.save_folder + '/' + aoi_name + '*.tiff')))
 
-    def save_as_npy(self, save_folder=os.getcwd()):
-        np.save(save_folder + '/data', self.data)
-        print('dataset saved in .npy format at this location:', save_folder)
+        if len(self.band_files_new) == 0:
+            if AOI != 'all':
+                start = time.time()
+                for source_raster in self.band_files:
+                    clip_to_aoi(source_raster, AOI, self.save_folder)
 
-    def sentinel_2_remap(self,interpolation='cubic_spline'):
+                print('clipped to AOI in: ', time.time() - start, ' seconds')
+                self.band_files_new = np.array(sorted(glob(self.save_folder + '/' + aoi_name + '*.tiff')))
+
+        data_dictionary = {}
+        for band in self.band_files_new:
+            arf = gdal.Open(band)
+            data = arf.ReadAsArray()
+            if save_as_npy:
+                name = band.split('/')[-1].split('.')[0]
+                self.save_as_npy(data, save_path=self.save_folder + '/' + name)
+            key = band.split('_')[-1].split('.')[0]
+            data_dictionary[key] = data
+
+        self.npy_files = []
+        self.npy_files = np.array(sorted(glob(self.save_folder + '/' + aoi_name + '*.npy')))
+        # if len(self.npy_files)>0:
+        # print(len(self.npy_files))
+
+        if resample:
+            data_resampled = self.sentinel_2_remap(data_dictionary, ref=resize_raster_source,
+                                                   interpolation=interpolation)
+            pass
+        else:
+            data_resampled = None
+        return data_dictionary, data_resampled
+
+    def sentinel_2_remap(self, ref='B02', interpolation=Resampling.cubic_spline):
         """
         Upscaling only
         :param interpolation:
@@ -473,7 +478,7 @@ class read_sentinel(object):
         # load and save all bands as numpy arrays for resuse and remap bands [3,4,5,7,8,9]
         start_time = time.time()
         row_, col_ = self.img_shp
-        if interpolation=='cubic_spline':
+        if interpolation == 'cubic_spline':
             interpolation_alg = cv2.INTER_CUBIC
         for b in range(10):
             if b in [4, 5, 6, 10, 11, 12]:
@@ -500,19 +505,23 @@ class read_sentinel(object):
         :return:
         """
 
+    def save_as_npy(self, data, save_path=os.getcwd() + '/data'):
+        np.save(save_path, self.data)
+        print('dataset saved in .npy format at this location:', save_path)
+
     @staticmethod
-    def get_ndvi(data,nir_index=7,red_index=3):
+    def get_ndvi(data, nir_index=7, red_index=3):
         """
         Normalized difference vegetation index
         NDVI = (b_nir - b_red)/(b_nir + b_red)
         :return: NDVI values for each pixel
         """
-        ndvi = (data[:,:,nir_index] - data[:,:,red_index])/(data[:,:,nir_index] + data[:,:,red_index])
+        ndvi = (data[:, :, nir_index] - data[:, :, red_index]) / (data[:, :, nir_index] + data[:, :, red_index])
 
         return ndvi
 
     @staticmethod
-    def get_ndwi(data, nir_index=7, green_index=2,swir_index=10, option=1):
+    def get_ndwi(data, nir_index=7, green_index=2, swir_index=10, option=1):
         """
         Normalized difference water index
 
@@ -523,9 +532,9 @@ class read_sentinel(object):
         NDWI = (b_nir - b11_swir)/(b_nir + b11_swir)
         :return: NDWI values for each pixel
         """
-        if option==1:
+        if option == 1:
             ndwi = (data[:, :, green_index] - data[:, :, nir_index]) / (data[:, :, nir_index] + data[:, :, green_index])
-        elif option==2:
+        elif option == 2:
             """
             needs resampling band 11 SWIR to 10x10 or band 8 NIR to 20x20
             """
@@ -544,8 +553,7 @@ class read_sentinel(object):
         :param data:
         :return:
         """
-        return str('Not yet implemented')
-
+        return NotImplementedError
 
 
 def from_geojson_to_list_coords(filename):
@@ -561,7 +569,7 @@ def from_geojson_to_list_coords(filename):
 
         geo_json_feature = geo_json_features[0]["geometry"]
 
-        assert geo_json_feature["type"] == "Polygon" , "Other types than polynomes is not yet possible"
+        assert geo_json_feature["type"] == "Polygon" , "Feature types other than polygons is not yet possible"
 
         list_coordinates = geo_json_feature["coordinates"][0]
 
