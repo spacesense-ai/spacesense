@@ -426,8 +426,7 @@ class read_sentinel_2(object):
         """
         NOTES
         1. order of bands: [01,02,03,04,05,06,07,08,09,10,11,12,8A]
-        2. returns: (a dictionary of 13 bands),(single array of dimension (x_img,y_img,13) in the 'order of bands')
-        3. loads from npy files for efficiency if available
+        2. returns: (a dictionary of 13 bands),(single array of dimension (13,x_img,y_img) in the 'order of bands')
         """
 
         if AOI == 'all':
@@ -452,52 +451,44 @@ class read_sentinel_2(object):
             data = arf.ReadAsArray()
             if save_as_npy:
                 name = band.split('/')[-1].split('.')[0]
-                self.save_as_npy(data, save_path=self.save_folder + '/' + name)
+                self.save_as_npy(data[0], save_path=self.save_folder + '/' + name)
             key = band.split('_')[-1].split('.')[0]
-            data_dictionary[key] = data
+            data_dictionary[key] = data[0]
+        self.data_dictionary = data_dictionary
 
-        self.npy_files = []
-        self.npy_files = np.array(sorted(glob(self.save_folder + '/' + aoi_name + '*.npy')))
+        # self.npy_files = []
+        # self.npy_files = np.array(sorted(glob(self.save_folder+'/'+aoi_name+'*.npy')))
         # if len(self.npy_files)>0:
         # print(len(self.npy_files))
 
         if resample:
-            data_resampled = self.sentinel_2_remap(data_dictionary, ref=resize_raster_source,
-                                                   interpolation=interpolation)
-            pass
+            self.data_resampled = self.sentinel_2_remap(ref_raster=resize_raster_source, interpolation=interpolation)
         else:
-            data_resampled = None
-        return data_dictionary, data_resampled
+            self.data_resampled = None
 
-    def sentinel_2_remap(self, ref='B02', interpolation=Resampling.cubic_spline):
+        return self.data_dictionary, self.data_resampled
+
+    def sentinel_2_remap(self, ref_raster='B02', interpolation=Resampling.cubic_spline):
         """
         Upscaling only
-        :param interpolation:
-        :return:
+        :param interpolation:Resampling.cubic_spline,Resampling.cubic,Resampling.average,
+                             Resampling.bilinear, Resampling.gauss, Resampling.lanczos
+        :return: array(13,x_img,y_img)
         """
-        # load and save all bands as numpy arrays for resuse and remap bands [3,4,5,7,8,9]
-        start_time = time.time()
-        row_, col_ = self.img_shp
-        if interpolation == 'cubic_spline':
-            interpolation_alg = cv2.INTER_CUBIC
-        for b in range(10):
-            if b in [4, 5, 6, 10, 11, 12]:
-                ar_n = np.zeros((row_, col_))
-                im = gdal.Open(self.band_files[b])
-                ar = im.ReadAsArray()
-                name = self.band_details[b] + '.npy'
-                ar_n = cv2.resize(ar, dsize=(row_, col_), interpolation=interpolation_alg)
-                np.save(self.folder_path + '/' + name, ar_n)
-                print(self.band_details[b], ar_n.shape)
+        band_names = sorted(self.data_dictionary.keys())
+        num_bands = len(band_names)
+        rows, cols = self.data_dictionary[ref_raster].shape
+        data_resampled = np.zeros((num_bands, rows, cols))
 
+        for i in range(len(band_names)):
+            if (rows, cols) == self.data_dictionary[band_names[i]].shape:
+                data_resampled[i, :, :] = self.data_dictionary[band_names[i]]
             else:
-                im = gdal.Open(self.band_files[b])
-                ar = im.ReadAsArray()
-                name = self.band_details[b] + '.npy'
-                np.save(self.folder_path + '/' + name, ar)
-                print(self.band_details[b], ar.shape)
-        print('all bands saved as numpy arrays for faster processing in \
-              %s seconds' % (time.time() - start_time))
+                with rasterio.open(self.band_files_new[i]) as arf:
+                    ar = arf.read(out_shape=(arf.count, rows, cols), resampling=interpolation)
+                    data_resampled[i, :, :] = ar[0]
+
+        return data_resampled
 
     def remove_nan(self):
         """
