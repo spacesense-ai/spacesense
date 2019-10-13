@@ -30,7 +30,6 @@ RUN pip3 install  numpy \
 		jupyter \
 		matplotlib \
 		sentinelsat \
-		sentinelhub \
 		pyshp \
 		pytest \
 		sklearn \
