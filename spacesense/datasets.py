@@ -423,7 +423,7 @@ class read_sentinel_2(object):
         self.data = None
         self.data_dictionary = None
 
-    def get_data(self, AOI, resample=False, resize_raster_source='B02',
+    def get_data(self, AOI='all', resample=False, resize_raster_source='B02',
                  interpolation=Resampling.cubic_spline, save_as_npy=False):
         """
         NOTES
@@ -448,6 +448,7 @@ class read_sentinel_2(object):
                 self.band_files_new = np.array(sorted(glob(self.save_folder + '/' + aoi_name + '*.tiff')))
 
         data_dictionary = {}
+        print("loading data...")
         for band in self.band_files_new:
             arf = gdal.Open(band)
             data = arf.ReadAsArray()
@@ -457,10 +458,12 @@ class read_sentinel_2(object):
             key = band.split('_')[-1].split('.')[0]
             data_dictionary[key] = data[0]
         self.data_dictionary = data_dictionary
-
+        print("all 13 bands loaded")
         if resample:
+            print("resampling data started...")
+            start = time.time()
             self.data_resampled = self.sentinel_2_remap(ref_raster=resize_raster_source, interpolation=interpolation)
-
+            print('resampled in: ', time.time() - start, ' seconds')
         return self.data_dictionary, self.data_resampled
 
     def sentinel_2_remap(self, ref_raster='B02', interpolation=Resampling.cubic_spline):
@@ -482,6 +485,7 @@ class read_sentinel_2(object):
                 with rasterio.open(self.band_files_new[i]) as arf:
                     ar = arf.read(out_shape=(arf.count, rows, cols), resampling=interpolation)
                     data_resampled[i, :, :] = ar[0]
+            print(band_names[i],' done')
 
         return data_resampled
 
@@ -502,7 +506,7 @@ class read_sentinel_2(object):
         NDVI = (b_nir - b_red)/(b_nir + b_red)
         :return: NDVI values for each pixel
         """
-        ndvi = (data[:, :, nir_index] - data[:, :, red_index]) / (data[:, :, nir_index] + data[:, :, red_index])
+        ndvi = (data[nir_index,:, :] - data[red_index,:, :]) / (data[nir_index,:, :] + data[red_index,:, :])
 
         return ndvi
 
@@ -519,12 +523,12 @@ class read_sentinel_2(object):
         :return: NDWI values for each pixel
         """
         if option == 1:
-            ndwi = (data[:, :, green_index] - data[:, :, nir_index]) / (data[:, :, nir_index] + data[:, :, green_index])
+            ndwi = (data[green_index,:, :] - data[nir_index,:, : ]) / (data[nir_index,:, :] + data[green_index,:, :])
         elif option == 2:
             """
             needs resampling band 11 SWIR to 10x10 or band 8 NIR to 20x20
             """
-            ndwi = (data[:, :, nir_index] - data[:, :, swir_index]) / (data[:, :, nir_index] + data[:, :, swir_index])
+            ndwi = (data[nir_index,:, :] - data[swir_index,:, :]) / (data[nir_index,:, :] + data[swir_index,:, :])
 
         return ndwi
 

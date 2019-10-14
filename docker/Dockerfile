@@ -36,7 +36,6 @@ RUN pip3 install  numpy \
 		keras \
 		tensorflow \
 		geopandas \
-		opencv-python\
 		pyModis
 
 RUN pip3 install python-cmr \
