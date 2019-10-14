@@ -94,11 +94,12 @@ class download_sentinel(object):
             if roi_polygon.split('.')[-1] == 'geojson':
                 footprint = geojson_to_wkt(read_geojson(self.roi_polygon))
 
-                products = self.api.query(footprint,
+                self.products = self.api.query(footprint,
                                           date=(self.startdate, self.enddate),
                                           platformname='Sentinel-2',
                                           cloudcoverpercentage=(0, cloudcover_max))
-                self.list_products = list(products.items())
+
+                self.list_products = list(self.products.items())
         print(len(self.list_products), ' products found')
 
     def download_files(self, list_product_ids,directory_path='.'):
