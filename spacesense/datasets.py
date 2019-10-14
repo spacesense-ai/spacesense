@@ -10,6 +10,7 @@ from osgeo import gdal
 from sentinelsat import SentinelAPI, read_geojson, geojson_to_wkt
 from rasterio.enums import Resampling
 import rasterio
+from .utils import clip_to_aoi
 
 class Dataset_general():
     """General class to define the needed functions to define in a Dataset class
@@ -420,9 +421,10 @@ class read_sentinel_2(object):
         self.save_folder = self.folder_path
         self.AOI = None
         self.data = None
+        self.data_dictionary = None
 
-    def get_data(self, AOI='westarea.shp', resample=False, resize_raster_source='B02',
-                 interpolation=Resampling.cubic_spline, p=[2000, 2000, 0, 2000, 0, 2000], save_as_npy=False):
+    def get_data(self, AOI, resample=False, resize_raster_source='B02',
+                 interpolation=Resampling.cubic_spline, save_as_npy=False):
         """
         NOTES
         1. order of bands: [01,02,03,04,05,06,07,08,09,10,11,12,8A]
@@ -456,15 +458,8 @@ class read_sentinel_2(object):
             data_dictionary[key] = data[0]
         self.data_dictionary = data_dictionary
 
-        # self.npy_files = []
-        # self.npy_files = np.array(sorted(glob(self.save_folder+'/'+aoi_name+'*.npy')))
-        # if len(self.npy_files)>0:
-        # print(len(self.npy_files))
-
         if resample:
             self.data_resampled = self.sentinel_2_remap(ref_raster=resize_raster_source, interpolation=interpolation)
-        else:
-            self.data_resampled = None
 
         return self.data_dictionary, self.data_resampled
 

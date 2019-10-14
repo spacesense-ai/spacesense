@@ -124,6 +124,16 @@ def optimize_OneClassSVM(X, n):
                 opt_gamma = gamma[j]
     return opt_nu, opt_gamma
 
+
 def mkdir(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
+
+
+def clip_to_aoi(source_raster, aoi_geometry, save_folder, save_format='tiff'):
+    aoi_name = aoi_geometry.split('/')[-1].split('.')[0]
+    source_raster_name = source_raster.split('/')[-1].split('.')[0]
+    new_file_path = save_folder +'/'+aoi_name+'_'+source_raster_name+'.'+save_format
+    command = 'gdalwarp  -cutline '+aoi_geometry+' -crop_to_cutline -dstalpha '+source_raster+' '+new_file_path
+    os.system(command)
+    print(new_file_path.split('/')[-1]+' done!')
