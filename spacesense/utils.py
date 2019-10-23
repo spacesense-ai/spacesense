@@ -3,6 +3,9 @@ import math
 import numpy as np
 from sklearn import svm
 import os
+import rasterio
+from rasterio.merge import merge
+
 
 def get_NDVI(data, nir_index=7, red_index=3, datatype='sentinel-2'):
     """
@@ -137,3 +140,21 @@ def clip_to_aoi(source_raster, aoi_geometry, save_folder, save_format='tiff'):
     command = 'gdalwarp  -cutline '+aoi_geometry+' -crop_to_cutline -dstalpha '+source_raster+' '+new_file_path
     os.system(command)
     print(new_file_path.split('/')[-1]+' done!')
+
+
+def merge_rasters(fp1, fp2, out_fp):
+    fps = [fp1, fp2]
+    src_files_to_mosaic = []
+    for fp in fps:
+        src = rasterio.open(fp)
+        src_files_to_mosaic.append(src)
+    mosaic, out_trans = merge(src_files_to_mosaic)
+    """ SAVE file """
+    out_meta = src.meta.copy()
+    out_meta.update({"driver": "GTiff",
+                     "height": mosaic.shape[1],
+                     "width": mosaic.shape[2],
+                     "transform": out_trans})
+    with rasterio.open(out_fp, "w", **out_meta) as dest:
+        dest.write(mosaic)
+    print(out_fp + ' saved!! ')
