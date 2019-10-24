@@ -158,14 +158,8 @@ class by_pixel(object):
 
         :return:
         '''
-        if len(x.shape) == 3:
-            if (x.shape[2]<x.shape[0]) and (x.shape[2]<x.shape[1]):
-                X = x.reshape(x.shape[0] * x.shape[1], x.shape[2])
-            elif (x.shape[0]<x.shape[1]) and (x.shape[0]<x.shape[2]):
-                X = x.reshape(x.shape[1] * x.shape[2], x.shape[0])
-                    
-        else:
-            X = x
+
+        X = self.get_data(x)
         y = np.ravel(y)
 
         # split dataset into train and test
@@ -189,10 +183,7 @@ class by_pixel(object):
 
         :return:
         '''
-        if len(x.shape) == 3:
-            x_pred = x.reshape(x.shape[0] * x.shape[1], x.shape[2])
-        else:
-            x_pred = x
+        x_pred = self.get_data(x)
         x_scaled = preprocessing.scale(x_pred, axis=1)
         y_pred = self.model.predict(x_scaled)
 
@@ -228,6 +219,21 @@ class by_pixel(object):
 
     def training_metrics(self,y_test,y_pred):
         return self.model_archi.training_metrics(y_test,y_pred)
+
+    @staticmethod
+    def get_data(x):
+        """ data shape transformation for pixel by pixel transformataion"""
+        if len(x.shape) == 3:
+            if (x.shape[2] < x.shape[0]) and (x.shape[2] < x.shape[1]):
+                X = x.reshape(x.shape[0] * x.shape[1], x.shape[2])
+            elif (x.shape[0] < x.shape[1]) and (x.shape[0] < x.shape[2]):
+                X = x.reshape(x.shape[0], x.shape[1] * x.shape[2])
+                X = X.T
+        else:
+            if x.shape[0] < x.shape[1]:
+                x = x.T
+            X = x
+        return X
 
 
 
