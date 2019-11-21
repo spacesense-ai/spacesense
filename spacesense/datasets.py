@@ -11,6 +11,9 @@ from sentinelsat import SentinelAPI, read_geojson, geojson_to_wkt
 from rasterio.enums import Resampling
 import rasterio
 from .utils import clip_to_aoi
+import zipfile
+
+
 
 class Dataset_general():
     """General class to define the needed functions to define in a Dataset class
@@ -49,19 +52,20 @@ class Dataset_general():
         raise RuntimeError("method not implemented")
 
 
-class download_sentinel(object):
+class download_sentinel(Dataset_general):
     def __init__(self, username, password):
 
+        super().__init__()
         self.username = username
         self.password = password
-        self.roi_polygon = None
-        self.startdate = None
-        self.enddate = None
-        self.list_products = None
 
-    def sentinel(self, download_type='ROI_polygon', roi_polygon=None, startdate=None, enddate=None, cloudcover_max=5,
-                 platformname='Sentinel-2'):
-        '''
+    def sentinel_2(self,download_type='ROI_polygon', roi_polygon=None, startdate=None, enddate=None, cloudcover_max=5):
+        params = {'download_type':download_type,'roi_polygon': roi_polygon, 'startdate': startdate, 'enddate': enddate,'platformname': 'Sentinel-2'}
+        return self.fetch_datasets(**params)
+
+    def fetch_datasets(self, download_type='ROI_polygon', roi_polygon=None, startdate=None, enddate=None, cloudcover_max=5,
+                       platformname='Sentinel-2'):
+        """
 
         :param download_type:
         :param username:
@@ -72,7 +76,7 @@ class download_sentinel(object):
         :param cloudcover_max:
         :param platformname:
         :return:
-        '''
+        """
 
         if startdate:
             self.startdate = startdate
@@ -96,15 +100,22 @@ class download_sentinel(object):
 
                 self.products = self.api.query(footprint,
                                           date=(self.startdate, self.enddate),
-                                          platformname='Sentinel-2',
+                                          platformname=platformname,
                                           cloudcoverpercentage=(0, cloudcover_max))
 
                 self.list_products = list(self.products.items())
         print(len(self.list_products), ' products found')
 
-    def download_files(self, list_product_ids,directory_path='.'):
+    def download_files(self, list_product_ids,directory_path='.',unzip=True):
         for product_id in list_product_ids:
             self.api.download(product_id, directory_path=directory_path)
+
+        if unzip:
+            print('extracting files')
+            file_names =glob(os.path.join(directory_path)+'/S*.zip')
+            for filename in file_names:
+                with zipfile.ZipFile(file_name, 'r') as zip_ref:
+                    zip_ref.extractall(folder)
 
     """ add function to display product AOI Polygon"""
 
@@ -158,7 +169,7 @@ class download_modis(Dataset_general):
         api = GranuleQuery().polygon(list_coords).short_name(self.product_shortname).temporal(startdate, enddate)
 
         n_produtes = api.hits()
-        print(f"{n_produtes} products found for these parameters")
+        #print(f"{n_produtes} products found for these parameters")
 
         if max_products == -1:
             max_products = n_produtes
@@ -265,7 +276,7 @@ class download_SMAP(object):
                        max_products=-1,
                        inverse_polygon_order=False):
 
-        """Qary the NASA API for products
+        """Query NASA API for products
 
         See: https://modis.ornl.gov/data/modis_webservice.html
 
@@ -289,7 +300,7 @@ class download_SMAP(object):
         api = GranuleQuery().polygon(list_coords).short_name(self.product_shortname).temporal(startdate, enddate)
 
         n_produtes = api.hits()
-        print(f"{n_produtes} products found for these parameters")
+        #print(f"{n_produtes} products found for these parameters")
 
         if max_products == -1:
             max_products = n_produtes
@@ -465,6 +476,8 @@ class read_sentinel_2(object):
             start = time.time()
             self.data_resampled = self.sentinel_2_remap(ref_raster=resize_raster_source, interpolation=interpolation)
             print('resampled in: ', time.time() - start, ' seconds')
+        else:
+            self.data_resampled =[]
         return self.data_dictionary, self.data_resampled
 
     def sentinel_2_remap(self, ref_raster='B02', interpolation=Resampling.cubic_spline):
