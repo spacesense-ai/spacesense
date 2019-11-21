@@ -114,8 +114,8 @@ class download_sentinel(Dataset_general):
             print('extracting files')
             file_names =glob(os.path.join(directory_path)+'/S*.zip')
             for filename in file_names:
-                with zipfile.ZipFile(file_name, 'r') as zip_ref:
-                    zip_ref.extractall(folder)
+                with zipfile.ZipFile(filename, 'r') as zip_ref:
+                    zip_ref.extractall(directory_path)
 
     """ add function to display product AOI Polygon"""
 
