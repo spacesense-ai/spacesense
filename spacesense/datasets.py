@@ -423,8 +423,19 @@ class read_sentinel_2(object):
 
     def __init__(self, folder_path):
         self.folder_path = folder_path
-        self.band_files = np.array(sorted(glob(self.folder_path + '/GRANULE' + '/*/IM*/*B*.jp2')))
-        self.band_details = [file.split('_')[-1].split('.')[0] for file in self.band_files]
+        self.level = self.folder_path.split('/')[-1].split('.')[0].split('_')[1][-2:]
+        if self.level == '2A':
+            self.band_files = glob(self.folder_path + '/GRANULE' + '/*/IM*/*10*/*B*')
+            for ext in ('*B05*', '*B06*', '*B07*', '*B8A*', '*B11*', '*B12*'):
+                self.band_files.extend(glob(os.path.join(self.folder_path + '/GRANULE' + '/*/IM*/*20*/', ext)))
+            for ext in ('*B01*', '*B09*', '*B10*'):
+                self.band_files.extend(glob(os.path.join(self.folder_path + '/GRANULE' + '/*/IM*/*60*/', ext)))
+            self.band_files = np.array(sorted(self.band_files))
+            self.band_details = [file.split('_')[-2] for file in self.band_files]
+
+        else:
+            self.band_files = np.array(sorted(glob(self.folder_path + '/GRANULE' + '/*/IM*/*B*.jp2')))
+            self.band_details = [file.split('_')[-1].split('.')[0] for file in self.band_files]
         im = gdal.Open(self.band_files[1])
         # arf_base = im.ReadAsArray()
         # self.img_shp = arf_base.shape
@@ -438,13 +449,12 @@ class read_sentinel_2(object):
     def get_data(self, AOI='all', resample=False, resize_raster_source='B02',
                  interpolation=Resampling.cubic_spline, save_as_npy=False):
         """
-        NOTES
-        1. order of bands: [01,02,03,04,05,06,07,08,09,10,11,12,8A]
-        2. returns: (a dictionary of 13 bands),(single array of dimension (13,x_img,y_img) in the 'order of bands')
+        :return: (a dictionary of 13 bands),(single array of dimension (13,x_img,y_img) in the 'order of bands')
         """
 
         if AOI == 'all':
             self.band_files_new = self.band_files
+            print('no AOI selected')
         else:
             # check for existing clipped raster files in tiff for given aoi
             aoi_name = AOI.split('/')[-1].split('.')[0]
@@ -462,13 +472,22 @@ class read_sentinel_2(object):
         data_dictionary = {}
         print("loading data...")
         for band in self.band_files_new:
+            if self.level =='2A':
+                name = '_'.join(band.split('_')[-3:-1])
+                key = band.split('_')[-2]
+            else:
+                name = band.split('/')[-1].split('.')[0]
+                key = band.split('_')[-1].split('.')[0]
+            print('loading ',name)
             arf = gdal.Open(band)
             data = arf.ReadAsArray()
+            if len(data.shape)==3:
+                data = data[0]
+
             if save_as_npy:
-                name = band.split('/')[-1].split('.')[0]
-                self.save_as_npy(data[0], save_path=self.save_folder + '/' + name)
-            key = band.split('_')[-1].split('.')[0]
-            data_dictionary[key] = data[0]
+                self.save_as_npy(data, save_path=self.save_folder + '/' + name)
+
+            data_dictionary[key] = data
         self.data_dictionary = data_dictionary
         print("all 13 bands loaded")
         if resample:
@@ -477,6 +496,7 @@ class read_sentinel_2(object):
             self.data_resampled = self.sentinel_2_remap(ref_raster=resize_raster_source, interpolation=interpolation)
             print('resampled in: ', time.time() - start, ' seconds')
         else:
+            print('resampling not selected ')
             self.data_resampled =[]
         return self.data_dictionary, self.data_resampled
 
