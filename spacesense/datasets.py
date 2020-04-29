@@ -63,7 +63,7 @@ class download_sentinel(Dataset_general):
         params = {'download_type':download_type,'roi_polygon': roi_polygon, 'startdate': startdate, 'enddate': enddate,'platformname': 'Sentinel-2'}
         return self.fetch_datasets(**params)
 
-     def sentinel_1(self,download_type='ROI_polygon', roi_polygon=None, startdate=None, enddate=None):
+    def sentinel_1(self,download_type='ROI_polygon', roi_polygon=None, startdate=None, enddate=None):
         params = {'download_type':download_type,'roi_polygon': roi_polygon, 'startdate': startdate, 'enddate': enddate,'platformname': 'Sentinel-1'}
         return self.fetch_datasets(**params)
 
