@@ -63,6 +63,10 @@ class download_sentinel(Dataset_general):
         params = {'download_type':download_type,'roi_polygon': roi_polygon, 'startdate': startdate, 'enddate': enddate,'platformname': 'Sentinel-2'}
         return self.fetch_datasets(**params)
 
+     def sentinel_1(self,download_type='ROI_polygon', roi_polygon=None, startdate=None, enddate=None):
+        params = {'download_type':download_type,'roi_polygon': roi_polygon, 'startdate': startdate, 'enddate': enddate,'platformname': 'Sentinel-1'}
+        return self.fetch_datasets(**params)
+
     def fetch_datasets(self, download_type='ROI_polygon', roi_polygon=None, startdate=None, enddate=None, cloudcover_max=5,
                        platformname='Sentinel-2'):
         """
@@ -98,10 +102,15 @@ class download_sentinel(Dataset_general):
             if roi_polygon.split('.')[-1] == 'geojson':
                 footprint = geojson_to_wkt(read_geojson(self.roi_polygon))
 
-                self.products = self.api.query(footprint,
-                                          date=(self.startdate, self.enddate),
-                                          platformname=platformname,
-                                          cloudcoverpercentage=(0, cloudcover_max))
+                if platformname == 'Sentinal-2':
+                    self.products = self.api.query(footprint,
+                                                date=(self.startdate, self.enddate),
+                                                platformname=platformname,
+                                                cloudcoverpercentage=(0, cloudcover_max))
+                elif platformname == 'Sentinal-1':
+                    self.products = self.api.query(footprint,
+                                                date=(self.startdate, self.enddate),
+                                                platformname=platformname)
 
                 self.list_products = list(self.products.items())
         print(len(self.list_products), ' products found')
