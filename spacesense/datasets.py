@@ -12,6 +12,8 @@ from rasterio.enums import Resampling
 import rasterio
 from .utils import clip_to_aoi
 import zipfile
+import json
+import codecs
 
 
 
@@ -63,7 +65,7 @@ class download_sentinel(Dataset_general):
         params = {'download_type':download_type,'roi_polygon': roi_polygon, 'startdate': startdate, 'enddate': enddate,'platformname': 'Sentinel-2'}
         return self.fetch_datasets(**params)
 
-     def sentinel_1(self,download_type='ROI_polygon', roi_polygon=None, startdate=None, enddate=None):
+    def sentinel_1(self,download_type='ROI_polygon', roi_polygon=None, startdate=None, enddate=None):
         params = {'download_type':download_type,'roi_polygon': roi_polygon, 'startdate': startdate, 'enddate': enddate,'platformname': 'Sentinel-1'}
         return self.fetch_datasets(**params)
 
@@ -100,19 +102,27 @@ class download_sentinel(Dataset_general):
 
         if download_type == 'ROI_polygon':
             if roi_polygon.split('.')[-1] == 'geojson':
-                footprint = geojson_to_wkt(read_geojson(self.roi_polygon))
+                
+                file_obj = open(self.roi_polygon, "r")
+                json_data = file_obj.read()
+                file_obj.close()
+                json_data = json_data.encode().decode('utf-8-sig')  # Remove utf-8 data if any present in the file
+                json_data = json.loads(json_data)
+                footprint = geojson_to_wkt(json_data)
 
-                if platformname == 'Sentinal-2':
+                if platformname == 'Sentinel-2':
                     self.products = self.api.query(footprint,
                                                 date=(self.startdate, self.enddate),
                                                 platformname=platformname,
                                                 cloudcoverpercentage=(0, cloudcover_max))
-                elif platformname == 'Sentinal-1':
+                    self.list_products = list(self.products.items())
+
+                elif platformname == 'Sentinel-1':
                     self.products = self.api.query(footprint,
                                                 date=(self.startdate, self.enddate),
                                                 platformname=platformname)
-
-                self.list_products = list(self.products.items())
+                    self.list_products = list(self.products.items())
+                    
         print(len(self.list_products), ' products found')
 
     def download_files(self, list_product_ids,directory_path='.',unzip=True):
