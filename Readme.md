@@ -13,5 +13,5 @@ Many sources of satellite imagery exists:
 The package `spacesense.ai` give the tools to query, download, process images from several sources, and build efficient models to generate intelligence.
 
 The package is currently  being developed. 
-Nothing much works for now.
+Nothing much works for now...
 [Keep in touch](https://www.spacesense.ai/) to the first version soon to come.
